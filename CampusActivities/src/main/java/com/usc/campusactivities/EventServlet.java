@@ -3,9 +3,18 @@ package com.usc.campusactivities;
 import javax.servlet.*;
 import javax.servlet.http.*;
 import java.io.*;
+import java.util.List;
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 public class EventServlet extends HttpServlet {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        List<Event> events = EventDAO.getAllEvents();
+        response.getWriter().write(new Gson().toJson(events));
+    }
+
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
