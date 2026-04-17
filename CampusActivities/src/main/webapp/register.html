@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register</title>
+</head>
+<body>
+    <h1>Register</h1>
+    <form id="registerForm">
+        Username: <input type="text" name="username" required><br>
+        Password: <input type="password" name="password" required><br>
+        Email: <input type="email" name="email" required><br>
+        Interests: <input type="text" name="interests" placeholder="e.g., basketball, swimming"><br>
+        Skill Level:
+        <select name="skillLevel">
+            <option value="beginner">Beginner</option>
+            <option value="intermediate">Intermediate</option>
+            <option value="competitive">Competitive</option>
+        </select><br>
+        <input type="submit" value="Register">
+    </form>
+    <p id="error" style="color:red;"></p>
+    <a href="login.html">Login</a>
+
+    <script src="register.js"></script>
+</body>
+</html>
