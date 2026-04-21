@@ -5,9 +5,11 @@ if (!user) {
     document.getElementById('username').textContent = user.username;
 }
 
-document.getElementById('logoutLink').addEventListener('click', async function(e) {
+document.getElementById('logoutLink').addEventListener('click', function(e) {
     e.preventDefault();
-    await fetch('logout');
-    sessionStorage.removeItem('user');
-    window.location.href = 'login.html';
+    fetch('/CampusActivities/logout')
+        .then(() => {
+            sessionStorage.removeItem('user');
+            window.location.href = 'login.html';
+        });
 });

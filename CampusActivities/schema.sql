@@ -1,3 +1,4 @@
+DROP DATABASE IF EXISTS campusactivities;
 CREATE DATABASE campusactivities;
 USE campusactivities;
 
