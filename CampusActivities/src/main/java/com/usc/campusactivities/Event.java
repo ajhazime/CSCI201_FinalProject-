@@ -9,6 +9,8 @@ public class Event {
     private int maxParticipants;
     private int currentParticipants;
     private int creatorId;
+    private String skillLevel;
+    private String endTime;
 
     public Event() {}
 
@@ -47,4 +49,13 @@ public class Event {
 
     public int getCreatorId() { return creatorId; }
     public void setCreatorId(int creatorId) { this.creatorId = creatorId; }
+
+    public String getSkillLevel() { return skillLevel; }
+    public void setSkillLevel(String skillLevel) { this.skillLevel = skillLevel; }
+
+    public String getEndTime() { return endTime; }
+    public void setEndTime(String endTime) { this.endTime = endTime; }
+
+    public String getEventName() { return eventName; }
+    public void setEventName(String eventName) { this.eventName = eventName; }
 }

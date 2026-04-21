@@ -46,4 +46,13 @@
     <url-pattern>/logout</url-pattern>
   </servlet-mapping>
 
+  <servlet>
+    <servlet-name>MatchServlet</servlet-name>
+    <servlet-class>com.usc.campusactivities.MatchServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>MatchServlet</servlet-name>
+    <url-pattern>/api/matches</url-pattern>
+  </servlet-mapping>
+
 </web-app>
