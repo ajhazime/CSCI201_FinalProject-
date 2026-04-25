@@ -4,7 +4,8 @@ import javax.servlet.*;
 import javax.servlet.http.*;
 import java.io.*;
 import java.util.List;
-import com.google.gson.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 public class MatchServlet extends HttpServlet {
 
@@ -27,16 +28,18 @@ public class MatchServlet extends HttpServlet {
         }
 
         MatchingEngine engine = new MatchingEngine();
-        List<MatchingEngine.EventMatch> matches = engine.generateMatches(user);
+        List<MatchingEngine.UserMatch> matches = engine.generateMatches(user);
 
-        // Build a JSON array where each entry contains the event fields plus matchScore.
         JsonArray results = new JsonArray();
-        Gson gson = new Gson();
 
-        for (MatchingEngine.EventMatch match : matches) {
-            // Convert the event to a JsonObject so we can add the score alongside it.
-            JsonObject entry = gson.toJsonTree(match.event).getAsJsonObject();
-            entry.addProperty("matchScore", match.score);
+        for (MatchingEngine.UserMatch match : matches) {
+            JsonObject entry = new JsonObject();
+            entry.addProperty("userID", match.user.getId());
+            entry.addProperty("username", match.user.getUsername());
+            entry.addProperty("skillLevel", match.user.getSkillLevel());
+            entry.addProperty("interests", match.user.getInterests());
+            entry.addProperty("avgRating", match.user.getAvgRating());
+            entry.addProperty("matchScore", Math.round(match.score / 100.0 * 100));
             results.add(entry);
         }
 

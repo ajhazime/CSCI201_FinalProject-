@@ -2,18 +2,17 @@ package com.usc.campusactivities;
 
 import java.sql.*;
 import java.time.*;
-import java.time.format.*;
 import java.util.*;
 
 public class MatchingEngine {
 
-    // Pairs an event with its computed match score for sorting and JSON response.
-    public static class EventMatch {
-        public final Event event;
+    // Pairs a matched user with their computed score for sorting and JSON response.
+    public static class UserMatch {
+        public final User user;
         public final int score;
 
-        public EventMatch(Event event, int score) {
-            this.event = event;
+        public UserMatch(User user, int score) {
+            this.user = user;
             this.score = score;
         }
     }
@@ -22,108 +21,90 @@ public class MatchingEngine {
     static {
         SKILL_RANK.put("beginner", 0);
         SKILL_RANK.put("intermediate", 1);
-        SKILL_RANK.put("advanced", 2);
+        SKILL_RANK.put("competitive", 2);
     }
 
     /**
-     * Activity/Interest match — 40 points max, hard filter on zero overlap.
+     * Interest overlap — 40 points max, hard filter on zero overlap.
      *
-     * Compares the user's comma-separated interests against the event's activityType.
-     * Returns -1 (hard filter) if no overlap exists at all, 40 if the event's
-     * activityType is found in the user's interest list.
+     * Counts how many of currentUser's interests appear in otherUser's interest list.
+     * Score = (matchingCount / currentUserInterestCount) * 40.
+     * Returns -1 if there is zero overlap (hard filter).
      */
-    public int comparePreferences(User user, Event event) {
-        if (user.getInterests() == null || user.getInterests().isBlank()) return -1;
-        if (event.getActivityType() == null) return -1;
+    public int comparePreferences(User currentUser, User otherUser) {
+        if (currentUser.getInterests() == null || currentUser.getInterests().isBlank()) return -1;
+        if (otherUser.getInterests() == null || otherUser.getInterests().isBlank()) return -1;
 
-        String eventActivity = event.getActivityType().toLowerCase().trim();
-        Set<String> interests = new HashSet<>();
-        for (String interest : user.getInterests().split(",")) {
-            interests.add(interest.trim().toLowerCase());
+        Set<String> otherInterests = new HashSet<>();
+        for (String i : otherUser.getInterests().split(",")) {
+            otherInterests.add(i.trim().toLowerCase());
         }
 
-        // Hard filter: zero overlap means this event is irrelevant to the user.
-        return interests.contains(eventActivity) ? 40 : -1;
+        String[] currentInterests = currentUser.getInterests().split(",");
+        int matchCount = 0;
+        for (String i : currentInterests) {
+            if (otherInterests.contains(i.trim().toLowerCase())) matchCount++;
+        }
+
+        if (matchCount == 0) return -1;
+
+        double fraction = (double) matchCount / currentInterests.length;
+        return (int) Math.round(fraction * 40);
     }
 
     /**
      * Availability overlap — 30 points max.
      *
-     * Score = (overlapMinutes / eventDurationMinutes) * 30, capped at 30.
-     * Overlap is summed across all of the user's availability slots on the
-     * event's day of week, so a user with two adjacent slots isn't penalised.
+     * Queries user_availability for both users and finds time overlap across
+     * matching days of the week.
+     * Score = (totalOverlapMinutes / totalCurrentUserAvailableMinutes) * 30.
+     * Returns 0 if either user has no availability set.
      */
-    public int compareAvailability(User user, Event event) {
-        if (event.getDate() == null || event.getTime() == null || event.getEndTime() == null) return 0;
+    public int compareAvailability(User currentUser, User otherUser) {
+        Map<String, List<long[]>> currentSlots = fetchAvailability(currentUser.getId());
+        Map<String, List<long[]>> otherSlots   = fetchAvailability(otherUser.getId());
 
-        LocalDate eventDate;
-        try {
-            eventDate = LocalDate.parse(event.getDate()); // expects YYYY-MM-DD
-        } catch (Exception e) {
-            return 0;
-        }
+        if (currentSlots.isEmpty() || otherSlots.isEmpty()) return 0;
 
-        DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("[H:mm][HH:mm]");
-        LocalTime eventStart, eventEnd;
-        try {
-            eventStart = LocalTime.parse(event.getTime(), timeFmt);
-            eventEnd   = LocalTime.parse(event.getEndTime(), timeFmt);
-        } catch (Exception e) {
-            return 0;
-        }
+        long totalCurrentMinutes = 0;
+        long totalOverlapMinutes = 0;
 
-        long eventDuration = Duration.between(eventStart, eventEnd).toMinutes();
-        if (eventDuration <= 0) return 0;
+        for (Map.Entry<String, List<long[]>> entry : currentSlots.entrySet()) {
+            String day = entry.getKey();
+            List<long[]> currentDaySlots = entry.getValue();
+            List<long[]> otherDaySlots   = otherSlots.getOrDefault(day, Collections.emptyList());
 
-        // Map Java DayOfWeek to the full English name stored in user_availability.
-        String dayName = eventDate.getDayOfWeek()
-                .getDisplayName(TextStyle.FULL, Locale.ENGLISH);
+            for (long[] cSlot : currentDaySlots) {
+                totalCurrentMinutes += cSlot[1] - cSlot[0];
 
-        try (Connection conn = DBUtil.getConnection()) {
-            String sql = "SELECT startTime, endTime FROM user_availability "
-                       + "WHERE userID = ? AND dayOfWeek = ?";
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setInt(1, user.getId());
-                ps.setString(2, dayName);
-                try (ResultSet rs = ps.executeQuery()) {
-                    long totalOverlap = 0;
-                    while (rs.next()) {
-                        LocalTime slotStart = rs.getTime("startTime").toLocalTime();
-                        LocalTime slotEnd   = rs.getTime("endTime").toLocalTime();
-
-                        // Overlap = intersection of [eventStart, eventEnd] and [slotStart, slotEnd].
-                        LocalTime overlapStart = eventStart.isAfter(slotStart) ? eventStart : slotStart;
-                        LocalTime overlapEnd   = eventEnd.isBefore(slotEnd)   ? eventEnd   : slotEnd;
-
-                        if (overlapStart.isBefore(overlapEnd)) {
-                            totalOverlap += Duration.between(overlapStart, overlapEnd).toMinutes();
-                        }
+                for (long[] oSlot : otherDaySlots) {
+                    long overlapStart = Math.max(cSlot[0], oSlot[0]);
+                    long overlapEnd   = Math.min(cSlot[1], oSlot[1]);
+                    if (overlapStart < overlapEnd) {
+                        totalOverlapMinutes += overlapEnd - overlapStart;
                     }
-
-                    // Clamp fraction to 1.0 in case slots overlap each other.
-                    double fraction = Math.min(1.0, (double) totalOverlap / eventDuration);
-                    return (int) Math.round(fraction * 30);
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return 0;
         }
+
+        if (totalCurrentMinutes == 0) return 0;
+
+        double fraction = Math.min(1.0, (double) totalOverlapMinutes / totalCurrentMinutes);
+        return (int) Math.round(fraction * 30);
     }
 
     /**
      * Skill level proximity — 20 points max.
      *
-     * 20 points for exact match, 10 for one level apart (beginner↔intermediate
-     * or intermediate↔advanced), 0 for two levels apart (beginner↔advanced).
+     * 20 points for exact match, 10 for one level apart, 0 for two levels apart.
      */
-    public int compareSkillLevel(User user, Event event) {
-        Integer userRank  = SKILL_RANK.get(normalize(user.getSkillLevel()));
-        Integer eventRank = SKILL_RANK.get(normalize(event.getSkillLevel()));
+    public int compareSkillLevel(User currentUser, User otherUser) {
+        Integer currentRank = SKILL_RANK.get(normalize(currentUser.getSkillLevel()));
+        Integer otherRank   = SKILL_RANK.get(normalize(otherUser.getSkillLevel()));
 
-        if (userRank == null || eventRank == null) return 0;
+        if (currentRank == null || otherRank == null) return 0;
 
-        int diff = Math.abs(userRank - eventRank);
+        int diff = Math.abs(currentRank - otherRank);
         if (diff == 0) return 20;
         if (diff == 1) return 10;
         return 0;
@@ -132,18 +113,20 @@ public class MatchingEngine {
     /**
      * Location preference — 10 points max.
      *
-     * Awards bonus points when the event's location name contains a keyword
-     * that matches one of the user's interests, suggesting the venue suits their
-     * preferred activity type (e.g., a basketball fan at a "Basketball Court").
+     * Awards 10 points if at least one preferred location appears in both users'
+     * comma-separated preferredLocations strings.
      */
-    public int compareLocation(User user, Event event) {
-        if (user.getInterests() == null || event.getLocation() == null) return 0;
+    public int compareLocation(User currentUser, User otherUser) {
+        if (currentUser.getPreferredLocations() == null || currentUser.getPreferredLocations().isBlank()) return 0;
+        if (otherUser.getPreferredLocations() == null || otherUser.getPreferredLocations().isBlank()) return 0;
 
-        String locationLower = event.getLocation().toLowerCase();
-        for (String interest : user.getInterests().split(",")) {
-            if (locationLower.contains(interest.trim().toLowerCase())) {
-                return 10;
-            }
+        Set<String> otherLocations = new HashSet<>();
+        for (String loc : otherUser.getPreferredLocations().split(",")) {
+            otherLocations.add(loc.trim().toLowerCase());
+        }
+
+        for (String loc : currentUser.getPreferredLocations().split(",")) {
+            if (otherLocations.contains(loc.trim().toLowerCase())) return 10;
         }
         return 0;
     }
@@ -151,76 +134,56 @@ public class MatchingEngine {
     /**
      * Rating deduction — returns 0–10 points to subtract.
      *
-     * Queries the host's avgRating from the users table. Hosts with low ratings
-     * are penalized to protect users from poor experiences.
      * Below 3.0 → subtract 10 pts; below 4.0 → subtract 5 pts; 4.0+ → no deduction.
      */
-    public int getRatingDeduction(int hostId) {
-        try (Connection conn = DBUtil.getConnection()) {
-            String sql = "SELECT avgRating FROM users WHERE userID = ?";
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setInt(1, hostId);
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        double rating = rs.getDouble("avgRating");
-                        if (rating < 3.0) return 10;
-                        if (rating < 4.0) return 5;
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    public int getRatingDeduction(User otherUser) {
+        double rating = otherUser.getAvgRating();
+        if (rating < 3.0) return 10;
+        if (rating < 4.0) return 5;
         return 0;
     }
 
     /**
-     * Computes the total match score for one event, applying all hard filters.
+     * Computes the total match score for one candidate user, applying all hard filters.
      *
-     * Returns -1 if the event should be excluded entirely (hard-filtered).
-     * Otherwise returns a value in the range 0–100 (before the 30-point cutoff
-     * that generateMatches enforces).
+     * Returns -1 if the candidate should be excluded entirely (zero interest overlap).
+     * Otherwise returns a value in the range 0–100.
      */
-    public int scoreEvent(User user, Event event) {
-        // Hard filter: interest overlap (comparePreferences returns -1 if no match).
-        int preferenceScore = comparePreferences(user, event);
+    public int scoreUser(User currentUser, User otherUser) {
+        int preferenceScore = comparePreferences(currentUser, otherUser);
         if (preferenceScore == -1) return -1;
 
         int total = preferenceScore
-                + compareAvailability(user, event)
-                + compareSkillLevel(user, event)
-                + compareLocation(user, event)
-                - getRatingDeduction(event.getCreatorId());
+                + compareAvailability(currentUser, otherUser)
+                + compareSkillLevel(currentUser, otherUser)
+                + compareLocation(currentUser, otherUser)
+                - getRatingDeduction(otherUser);
 
         return Math.max(total, 0);
     }
 
     /**
-     * Fetches all eligible events, scores each one, and returns a ranked list.
+     * Fetches all eligible candidate users, scores each one, and returns a ranked list.
      *
      * Hard filters applied here:
-     *   - User is already registered for the event
-     *   - Event is full (currentParticipants >= maxParticipants)
-     *   - User has an active penalty (penalties > 0)
-     *   - Event start time has already passed
-     *   - Activity type has zero overlap with user interests (handled in scoreEvent)
+     *   - The candidate is the current user themselves
+     *   - The candidate has an active penalty (penaltyTracked = true)
+     *   - Zero interest overlap with currentUser (handled in scoreUser)
      *   - Total score below 30
      */
-    public List<EventMatch> generateMatches(User user) {
-        // Active penalty is a hard stop — no matches for penalised users.
-        if (user.getPenalties() > 0) return Collections.emptyList();
+    public List<UserMatch> generateMatches(User currentUser) {
+        if (currentUser.getPenaltyTracked()) return Collections.emptyList();
 
-        List<Event> candidates = fetchEligibleEvents(user);
-        List<EventMatch> results = new ArrayList<>();
+        List<User> candidates = fetchAllOtherUsers(currentUser);
+        List<UserMatch> results = new ArrayList<>();
 
-        for (Event event : candidates) {
-            int score = scoreEvent(user, event);
+        for (User candidate : candidates) {
+            int score = scoreUser(currentUser, candidate);
             if (score >= 30) {
-                results.add(new EventMatch(event, score));
+                results.add(new UserMatch(candidate, score));
             }
         }
 
-        // Sort descending by score so the best matches appear first.
         results.sort((a, b) -> Integer.compare(b.score, a.score));
         return results;
     }
@@ -230,49 +193,64 @@ public class MatchingEngine {
     // -----------------------------------------------------------------------
 
     /**
-     * Queries events that pass the structural hard filters: not full, in the
-     * future, and not already registered by this user. Activity and score
-     * filters are applied afterwards in generateMatches / scoreEvent.
+     * Queries all users except the current user and those with active penalties.
      */
-    private List<Event> fetchEligibleEvents(User user) {
-        List<Event> events = new ArrayList<>();
-        String sql =
-            "SELECT e.eventID, e.activityType, l.name AS location, e.date, e.time, e.endTime, "
-          + "       e.maxParticipants, e.currentParticipants, e.hostID, "
-          + "       e.skillLevel, e.eventName "
-          + "FROM events e "
-          + "JOIN locations l ON e.locationID = l.locationID "
-          + "WHERE e.currentParticipants < e.maxParticipants "
-          + "  AND TIMESTAMP(e.date, e.time) > NOW() "
-          + "  AND e.eventID NOT IN ("
-          + "      SELECT eventID FROM registrations WHERE userID = ?"
-          + "  )";
+    private List<User> fetchAllOtherUsers(User currentUser) {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT userID, username, firstName, lastName, interests, skillLevel, "
+                   + "       avgRating, preferredLocations, penaltyTracked "
+                   + "FROM users "
+                   + "WHERE userID != ? AND penaltyTracked = false";
 
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, user.getId());
+            ps.setInt(1, currentUser.getId());
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    Event e = new Event();
-                    e.setId(rs.getInt("eventID"));
-                    e.setActivityType(rs.getString("activityType"));
-                    e.setLocation(rs.getString("location"));
-                    e.setDate(rs.getString("date"));
-                    e.setTime(rs.getString("time"));
-                    e.setMaxParticipants(rs.getInt("maxParticipants"));
-                    e.setCurrentParticipants(rs.getInt("currentParticipants"));
-                    e.setCreatorId(rs.getInt("hostID"));
-                    e.setEndTime(rs.getString("endTime"));
-                    e.setSkillLevel(rs.getString("skillLevel"));
-                    e.setEventName(rs.getString("eventName"));
-                    events.add(e);
+                    User u = new User();
+                    u.setId(rs.getInt("userID"));
+                    u.setUsername(rs.getString("username"));
+                    u.setFirstName(rs.getString("firstName"));
+                    u.setLastName(rs.getString("lastName"));
+                    u.setInterests(rs.getString("interests"));
+                    u.setSkillLevel(rs.getString("skillLevel"));
+                    u.setAvgRating(rs.getDouble("avgRating"));
+                    u.setPreferredLocations(rs.getString("preferredLocations"));
+                    u.setPenaltyTracked(rs.getBoolean("penaltyTracked"));
+                    users.add(u);
                 }
             }
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
 
-        return events;
+        return users;
+    }
+
+    /**
+     * Returns a map of dayOfWeek → list of [startMinutes, endMinutes] slots
+     * for the given user, where minutes are measured from midnight.
+     */
+    private Map<String, List<long[]>> fetchAvailability(int userId) {
+        Map<String, List<long[]>> slots = new HashMap<>();
+        String sql = "SELECT dayOfWeek, startTime, endTime FROM user_availability WHERE userID = ?";
+
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String day = rs.getString("dayOfWeek");
+                    long start = rs.getTime("startTime").toLocalTime().toSecondOfDay() / 60;
+                    long end   = rs.getTime("endTime").toLocalTime().toSecondOfDay() / 60;
+                    slots.computeIfAbsent(day, k -> new ArrayList<>()).add(new long[]{start, end});
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        return slots;
     }
 
     private String normalize(String s) {
