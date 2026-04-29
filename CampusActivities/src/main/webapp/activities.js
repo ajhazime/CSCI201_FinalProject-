@@ -66,6 +66,7 @@ fetch("events")
             const maxParticipants = Number(e.maxParticipants || 0);
             const currentParticipants = Number(e.currentParticipants || 0);
             const openSpots = Math.max(maxParticipants - currentParticipants, 0);
+            const endTime = e.endTime ? ` - ${e.endTime}` : "";
 
             totalOpenSpots += openSpots;
 
@@ -79,7 +80,7 @@ fetch("events")
                 <td><span class="activity-pill">${escapeHtml(e.activityType || "Activity")}</span></td>
                 <td><span class="location-text">${escapeHtml(e.location || "N/A")}</span></td>
                 <td>${escapeHtml(e.date || "N/A")}</td>
-                <td>${escapeHtml(e.time || "N/A")}</td>
+                <td>${escapeHtml((e.time || "N/A") + endTime)}</td>
                 <td><span class="spots-pill">${currentParticipants}/${maxParticipants}</span></td>
             `;
 

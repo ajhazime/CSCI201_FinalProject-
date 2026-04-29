@@ -1,19 +1,481 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Create Event</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USC FIT - Create Event</title>
+    <style>
+        :root {
+            --usc-cardinal: #992233;
+            --usc-gold: #FFCC00;
+            --bg-dark: #121212;
+            --surface: #141518;
+            --surface-soft: #1a1c20;
+            --border: #2a2c31;
+            --text-main: #f4f4f4;
+            --text-muted: #a1a1aa;
+            --text-soft: #c6c6cf;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: var(--bg-dark);
+            background-image: repeating-linear-gradient(45deg, #1a1a1a 0px, #1a1a1a 2px, transparent 2px, transparent 10px);
+            margin: 0;
+            min-height: 100vh;
+            color: white;
+            padding: 18px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 14px;
+        }
+
+        .header h1 {
+            color: var(--usc-gold);
+            font-size: 42px;
+            letter-spacing: 2px;
+            margin: 0 0 2px 0;
+            text-transform: uppercase;
+            font-weight: 800;
+        }
+
+        .header p {
+            font-size: 10px;
+            color: #888;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-top: 0;
+        }
+
+        .modal {
+            width: 100%;
+            max-width: 1180px;
+            margin: 0 auto;
+            background: linear-gradient(180deg, rgba(20,21,24,0.95), rgba(15,16,19,0.97));
+            border: 1px solid #32343a;
+            border-radius: 14px;
+            box-shadow: 0 22px 40px rgba(0,0,0,0.55);
+            padding: 20px;
+        }
+
+        .modal-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .modal h2 {
+            margin: 0 0 4px 0;
+            font-size: 36px;
+            color: #fff;
+            font-weight: 750;
+        }
+
+        .modal .subtitle {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 17px;
+        }
+
+        .close-link {
+            color: #c6c6cc;
+            text-decoration: none;
+            font-size: 30px;
+            line-height: 1;
+            padding: 2px 6px;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 14px;
+        }
+
+        .section {
+            background: linear-gradient(180deg, rgba(27,29,34,0.96), rgba(19,20,24,0.96));
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 12px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .section-title .pill {
+            width: 22px;
+            height: 22px;
+            border-radius: 999px;
+            background: rgba(153,34,51,0.9);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .field {
+            margin-bottom: 11px;
+        }
+
+        label {
+            display: block;
+            color: var(--text-soft);
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        select,
+        input[type="date"],
+        input[type="time"] {
+            width: 100%;
+            box-sizing: border-box;
+            height: 44px;
+            border-radius: 8px;
+            border: 1px solid #3a3d44;
+            background: #111319;
+            color: #fff;
+            font-size: 15px;
+            padding: 0 12px;
+        }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .calendar-box {
+            border: 1px solid #353943;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 8px;
+            background: rgba(10,12,16,0.45);
+        }
+
+        .calendar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #d5d7de;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .calendar-nav {
+            border: none;
+            background: transparent;
+            color: #d5d7de;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            font-size: 12px;
+        }
+
+        .calendar-day-label {
+            text-align: center;
+            color: #8f94a3;
+            padding: 3px 0;
+            font-size: 11px;
+        }
+
+        .calendar-day {
+            border: 1px solid transparent;
+            background: transparent;
+            color: #d5d7de;
+            border-radius: 6px;
+            height: 28px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .calendar-day:hover {
+            border-color: #454a57;
+        }
+
+        .calendar-day.muted {
+            color: #636a78;
+        }
+
+        .calendar-day.selected {
+            background: var(--usc-cardinal);
+            border-color: var(--usc-cardinal);
+            color: white;
+        }
+
+        .capacity-control {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #3a3d44;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .capacity-control button {
+            width: 42px;
+            height: 42px;
+            border: none;
+            background: #101216;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .capacity-control input {
+            width: 74px;
+            height: 42px;
+            border: none;
+            background: #151821;
+            color: #fff;
+            text-align: center;
+            font-size: 16px;
+            -moz-appearance: textfield;
+        }
+
+        .capacity-control input::-webkit-outer-spin-button,
+        .capacity-control input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .small-note {
+            margin-top: 7px;
+            font-size: 13px;
+            color: #9da2ad;
+        }
+
+        .preview-item {
+            border: 1px solid #30343c;
+            border-radius: 9px;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: rgba(17,19,24,0.82);
+        }
+
+        .preview-label {
+            font-size: 13px;
+            color: #9aa0ad;
+            margin-bottom: 3px;
+        }
+
+        .preview-value {
+            font-size: 16px;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .tag-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .quick-tag {
+            border: 1px solid #3a3f49;
+            background: #1a1f29;
+            color: #e7e9ef;
+            border-radius: 999px;
+            padding: 7px 12px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .quick-tag:hover {
+            border-color: #545b68;
+        }
+
+        .quick-tag.active {
+            background: #8f2435;
+            border-color: #8f2435;
+            color: white;
+        }
+
+        .tips {
+            margin: 0;
+            padding-left: 16px;
+            color: #c0c5cf;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .submit-row {
+            margin-top: 6px;
+        }
+
+        .submit-row button {
+            width: 100%;
+            border-radius: 8px;
+            border: none;
+            height: 48px;
+            background: linear-gradient(90deg, #84202d, #b22d3f);
+            color: #fff;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .secondary-link {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 20px;
+            color: #cb3348;
+            font-weight: 700;
+        }
+
+        .secondary-link a {
+            color: #cb3348;
+            text-decoration: none;
+        }
+
+        #error {
+            color: #f26a7a;
+            font-size: 13px;
+            text-align: center;
+            margin-top: 10px;
+            min-height: 18px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Create New Event</h1>
-    <form id="createEventForm">
-        Activity Type: <input type="text" name="activityType" required><br>
-        Location: <input type="text" name="location" required><br>
-        Date: <input type="date" name="date" required><br>
-        Time: <input type="time" name="time" required><br>
-        Max Participants: <input type="number" name="maxParticipants" required><br>
-        <input type="submit" value="Create">
-    </form>
-    <p id="error" style="color:red;"></p>
+    <div class="header">
+        <h1>USC FIT</h1>
+        <p>Campus Fitness Platform</p>
+    </div>
+
+    <div class="modal">
+        <div class="modal-top">
+            <div>
+                <h2>Create New Event</h2>
+                <p class="subtitle">Host a campus activity for other Trojans.</p>
+            </div>
+            <a class="close-link" href="activities.html">×</a>
+        </div>
+        <form id="createEventForm">
+            <div class="layout">
+                <div>
+                    <div class="section">
+                        <div class="section-title"><span class="pill">1</span>Activity Details</div>
+                        <div class="field">
+                            <label for="activityType">Activity Type</label>
+                            <select id="activityType" name="activityType" required></select>
+                        </div>
+                        <div class="field">
+                            <label for="location">Location (approved facility)</label>
+                            <select id="location" name="location" required></select>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-title"><span class="pill">2</span>Date & Time</div>
+                        <div class="two-col">
+                            <div>
+                                <label for="date">Date</label>
+                                <input id="date" type="date" name="date" required>
+                                <div class="calendar-box">
+                                    <div class="calendar-header">
+                                        <button id="calendarPrev" class="calendar-nav" type="button">‹</button>
+                                        <strong id="calendarTitle">Month YYYY</strong>
+                                        <button id="calendarNext" class="calendar-nav" type="button">›</button>
+                                    </div>
+                                    <div id="calendarGrid" class="calendar-grid"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="field">
+                                    <label for="startTime">Start Time</label>
+                                    <input id="startTime" type="time" name="startTime" required>
+                                </div>
+                                <div class="field">
+                                    <label for="endTime">End Time</label>
+                                    <input id="endTime" type="time" name="endTime" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-title"><span class="pill">3</span>Capacity</div>
+                        <label for="maxParticipants">Max Participants</label>
+                        <div class="capacity-control">
+                            <button type="button" id="decreaseCapacity">-</button>
+                            <input id="maxParticipants" type="number" name="maxParticipants" min="1" value="10" required>
+                            <button type="button" id="increaseCapacity">+</button>
+                        </div>
+                        <div class="small-note">You'll be the first participant.</div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="section">
+                        <div class="section-title">Event Preview</div>
+                        <div class="preview-item">
+                            <div class="preview-label">Activity Type</div>
+                            <div id="previewActivity" class="preview-value">Basketball</div>
+                        </div>
+                        <div class="preview-item">
+                            <div class="preview-label">Location</div>
+                            <div id="previewLocation" class="preview-value">Lyon Center</div>
+                        </div>
+                        <div class="preview-item">
+                            <div class="preview-label">Date</div>
+                            <div id="previewDate" class="preview-value">-</div>
+                        </div>
+                        <div class="preview-item">
+                            <div class="preview-label">Time</div>
+                            <div id="previewTime" class="preview-value">-</div>
+                        </div>
+                        <div class="preview-item">
+                            <div class="preview-label">Max Capacity</div>
+                            <div id="previewCapacity" class="preview-value">10 Participants</div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-title">Quick Suggestions</div>
+                        <div class="tag-wrap">
+                            <button class="quick-tag" type="button" data-activity="Weightlifting" data-location="Lyon Center" data-start="18:00" data-end="19:30" data-capacity="10">Strength Training</button>
+                            <button class="quick-tag" type="button" data-activity="Soccer" data-location="PED South Gym" data-start="17:30" data-end="19:00" data-capacity="14">Soccer</button>
+                            <button class="quick-tag" type="button" data-activity="Swimming" data-location="Uytengsu Aquatics Center" data-start="12:00" data-end="13:00" data-capacity="8">Lap Swimming</button>
+                            <button class="quick-tag" type="button" data-activity="Yoga" data-location="USC Village Fitness Center" data-start="07:30" data-end="08:30" data-capacity="12">Morning Yoga</button>
+                            <button class="quick-tag" type="button" data-activity="Pilates" data-location="HSC Fitness Center" data-start="16:00" data-end="17:00" data-capacity="10">Pilates Core</button>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-title">Tips</div>
+                        <ul class="tips">
+                            <li>Choose a time when most people are available.</li>
+                            <li>Be specific in your activity type.</li>
+                            <li>Review facility rules before posting.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="submit-row">
+                <button type="submit">Create Event</button>
+            </div>
+            <div class="secondary-link">
+                <a href="activities.html">Back to Activities</a>
+            </div>
+            <p id="error"></p>
+        </form>
+    </div>
 
     <script src="createEvent.js"></script>
 </body>

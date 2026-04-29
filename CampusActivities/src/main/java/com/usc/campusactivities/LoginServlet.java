@@ -7,6 +7,9 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 public class LoginServlet extends HttpServlet {
+    private static final String GUEST_USERNAME = "guest";
+    private static final String GUEST_PASSWORD = "guest12345678";
+
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
@@ -26,12 +29,24 @@ public class LoginServlet extends HttpServlet {
                 return;
             }
 
-            User user = UserDAO.getUserByUsername(username);
+            User user = null;
+            if (GUEST_USERNAME.equals(username) && GUEST_PASSWORD.equals(password)) {
+                // Internal guest hook for demos when DB-backed registration is unavailable.
+                user = new User(0, GUEST_USERNAME, "", "guest@usc.edu", "fitness,wellness", "beginner", 0);
+            } else {
+                user = UserDAO.getUserByUsername(username);
+            }
             if (user != null && user.getPassword().equals(password)) {
                 HttpSession session = request.getSession();
                 session.setAttribute("user", user);
                 jsonResponse.addProperty("success", true);
                 jsonResponse.addProperty("message", "Login successful");
+                jsonResponse.add("user", gson.toJsonTree(user));
+            } else if (GUEST_USERNAME.equals(username) && GUEST_PASSWORD.equals(password)) {
+                HttpSession session = request.getSession();
+                session.setAttribute("user", user);
+                jsonResponse.addProperty("success", true);
+                jsonResponse.addProperty("message", "Guest login successful");
                 jsonResponse.add("user", gson.toJsonTree(user));
             } else {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

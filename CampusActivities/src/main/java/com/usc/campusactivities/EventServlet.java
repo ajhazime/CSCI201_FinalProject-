@@ -11,6 +11,11 @@ import com.google.gson.JsonObject;
 
 public class EventServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        if ("/createEvent".equals(request.getServletPath())) {
+            response.sendRedirect(request.getContextPath() + "/createEvent.html");
+            return;
+        }
+
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         List<Event> events = EventDAO.getAllEvents();
