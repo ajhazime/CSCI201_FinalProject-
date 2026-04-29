@@ -72,16 +72,119 @@
         #status {
             font-size: 14px;
             color: var(--text-muted);
-            margin-bottom: 10px;
+            margin-bottom: 16px;
         }
 
         #results {
-            font-size: 13px;
-            white-space: pre-wrap;
-            word-break: break-all;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* ----- Match card styles ----- */
+
+        .match-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
             background: #f8f8f8;
-            border-radius: 8px;
-            padding: 15px;
+            border-radius: 10px;
+            transition: background-color 0.15s ease, transform 0.15s ease;
+        }
+
+        .match-card:hover {
+            background: #f0f0f0;
+            transform: translateY(-1px);
+        }
+
+        .match-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--usc-cardinal);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .match-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .match-name {
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text-main);
+            margin-bottom: 2px;
+        }
+
+        .match-meta {
+            font-size: 13px;
+            color: var(--text-muted);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .match-rating {
+            font-size: 12px;
+            color: #b88600;
+            margin-top: 2px;
+        }
+
+        .match-score {
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--usc-cardinal);
+            flex-shrink: 0;
+            min-width: 48px;
+            text-align: right;
+            align-self: flex-start;
+            margin-top: 4px;
+        }
+
+        /* ----- Action buttons inside the card ----- */
+
+        .match-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .card-action {
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.15s ease, color 0.15s ease;
+        }
+
+        .card-action-secondary {
+            background: white;
+            color: var(--usc-cardinal);
+            border: 1px solid var(--usc-cardinal);
+        }
+
+        .card-action-secondary:hover {
+            background: #fdf2f4;
+        }
+
+        .card-action-primary {
+            background: var(--usc-cardinal);
+            color: white;
+            border: 1px solid var(--usc-cardinal);
+        }
+
+        .card-action-primary:hover {
+            background: #7a1b29;
         }
 
         .back-link {
