@@ -2,10 +2,12 @@ package com.usc.campusactivities;
 
 public class Event {
     private int id;
+    private String eventName;
     private String activityType;
     private String location;
     private String date;
     private String time;
+    private String endTime;
     private int maxParticipants;
     private int currentParticipants;
     private int creatorId;
@@ -38,6 +40,9 @@ public class Event {
 
     public String getTime() { return time; }
     public void setTime(String time) { this.time = time; }
+
+    public String getEndTime() { return endTime; }
+    public void setEndTime(String endTime) { this.endTime = endTime; }
 
     public int getMaxParticipants() { return maxParticipants; }
     public void setMaxParticipants(int maxParticipants) { this.maxParticipants = maxParticipants; }
