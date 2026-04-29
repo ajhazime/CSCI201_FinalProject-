@@ -18,6 +18,7 @@ CREATE TABLE events (
     location VARCHAR(100) NOT NULL,
     date DATE NOT NULL,
     time TIME NOT NULL,
+    end_time TIME NOT NULL,
     max_participants INT NOT NULL,
     current_participants INT DEFAULT 0,
     creator_id INT,
@@ -31,4 +32,15 @@ CREATE TABLE facilities (
     rating DOUBLE DEFAULT 0
 );
 
--- Add more tables as needed for reviews, participants, etc.
+CREATE TABLE event_participants (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    event_id INT NOT NULL,
+    user_id INT NOT NULL,
+    role VARCHAR(20) DEFAULT 'PARTICIPANT',
+    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_event_user (event_id, user_id),
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Add more tables as needed for reviews, etc.
