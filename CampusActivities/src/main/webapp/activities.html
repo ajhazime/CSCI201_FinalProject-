@@ -1,17 +1,103 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Activities</title>
+    <meta charset="UTF-8">
+    <title>USC FIT Activities</title>
+    <link rel="stylesheet" href="activities.css">
 </head>
 <body>
-    <h1>Campus Activities</h1>
-    <table border="1">
-        <thead>
-            <tr><th>Activity</th><th>Location</th><th>Date</th><th>Time</th><th>Spots</th></tr>
-        </thead>
-        <tbody id="eventsBody"></tbody>
-    </table>
-    <a href="createEvent.html">Create Event</a>
+    <div class="activities-wrapper">
+        <aside class="activities-sidebar">
+            <div>
+                <div class="sidebar-brand">
+                    <h1>USC FIT</h1>
+                    <p>CAMPUS FITNESS</p>
+                </div>
+
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar" id="sidebarInitials">U</div>
+                    <div>
+                        <div class="sidebar-user-name" id="sidebarUsername">User</div>
+                        <div class="sidebar-user-level">Student</div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">MAIN</div>
+                <a href="dashboard.html" class="sidebar-link">Dashboard</a>
+                <a href="activities.html" class="sidebar-link active">Events</a>
+                <a href="matching.html" class="sidebar-link">My Matches</a>
+
+                <div class="sidebar-section">EXPLORE</div>
+                <a href="locations.html" class="sidebar-link">Facilities</a>
+
+                <div class="sidebar-section">ACCOUNT</div>
+                <a href="profile.html" class="sidebar-link">Profile</a>
+            </div>
+
+            <a href="#" id="logoutLink" class="logout-button">Sign out</a>
+        </aside>
+
+        <main class="activities-content">
+            <header class="activities-header">
+                <div>
+                    <h1>Activities</h1>
+                    <p>Browse available campus activities and events.</p>
+                </div>
+
+                <div class="header-actions">
+                    <a href="dashboard.html" class="header-button">Back to dashboard</a>
+                    <a href="createEvent.html" class="header-button primary">+ Create event</a>
+                </div>
+            </header>
+
+            <section class="activities-main">
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <div class="summary-label">Available Events</div>
+                        <div class="summary-value" id="eventCount">0</div>
+                    </div>
+
+                    <div class="summary-card">
+                        <div class="summary-label">Open Spots</div>
+                        <div class="summary-value" id="openSpotCount">0</div>
+                    </div>
+
+                    <div class="summary-card">
+                        <div class="summary-label">Locations</div>
+                        <div class="summary-value" id="locationCount">0</div>
+                    </div>
+                </div>
+
+                <div class="events-card">
+                    <div class="events-card-header">
+                        <div>
+                            <h2>Campus Activities</h2>
+                            <p>See activity type, location, date, time, and spots available.</p>
+                        </div>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table class="events-table">
+                            <thead>
+                                <tr>
+                                    <th>Activity</th>
+                                    <th>Location</th>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Spots</th>
+                                </tr>
+                            </thead>
+                            <tbody id="eventsBody">
+                                <tr>
+                                    <td colspan="5" class="loading-cell">Loading activities...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
 
     <script src="activities.js"></script>
 </body>

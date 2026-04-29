@@ -1,14 +1,213 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Dashboard</title>
+    <meta charset="UTF-8">
+    <title>USC FIT Dashboard</title>
+    <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
-    <h1>Welcome <span id="username"></span></h1>
-    <a href="activities.html">Browse Activities</a>
-    <a href="createEvent.html">Create Event</a>
-    <a href="profile.html">Profile</a>
-    <a href="#" id="logoutLink">Logout</a>
+    <div class="dashboard-wrapper">
+        <aside class="dashboard-sidebar">
+            <div>
+                <div class="sidebar-brand">
+                    <h1>USC FIT</h1>
+                    <p>CAMPUS FITNESS</p>
+                </div>
+
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar" id="sidebarInitials">U</div>
+                    <div>
+                        <div class="sidebar-user-name" id="sidebarUsername">User</div>
+                        <div class="sidebar-user-level">Student</div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">MAIN</div>
+                <a href="dashboard.html" class="sidebar-link active">Dashboard</a>
+                <a href="activities.html" class="sidebar-link">Events</a>
+                <a href="matching.html" class="sidebar-link">My Matches</a>
+
+                <div class="sidebar-section">EXPLORE</div>
+                <a href="locations.html" class="sidebar-link">Facilities</a>
+
+                <div class="sidebar-section">ACCOUNT</div>
+                <a href="profile.html" class="sidebar-link">Profile</a>
+            </div>
+
+            <a href="#" id="logoutLink" class="logout-button">Sign out</a>
+        </aside>
+
+        <div class="dashboard-content">
+            <header class="dashboard-header">
+                <div>
+                    <h1>Dashboard</h1>
+                    <p>Welcome back, <span id="username"></span></p>
+                </div>
+
+                <div class="header-actions">
+                    <a href="locations.html" class="header-button">Browse facilities</a>
+                    <a href="createEvent.html" class="header-button primary">+ Create event</a>
+                </div>
+            </header>
+
+            <main class="dashboard-main">
+                <section class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Events Joined</div>
+                        <div class="stat-value">0</div>
+                        <div class="stat-change">No events joined yet</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-label">Matches Found</div>
+                        <div class="stat-value">0</div>
+                        <div class="stat-change">Start matching with others</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-label">Penalty Score</div>
+                        <div class="stat-value">0</div>
+                        <div class="stat-change">All clear</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-label">Facility Reviews</div>
+                        <div class="stat-value">0</div>
+                        <div class="stat-change">Review a facility</div>
+                    </div>
+                </section>
+
+                <section class="dashboard-grid">
+                    <a href="activities.html" class="dashboard-card">
+                        <div class="card-header">
+                            <h3>Upcoming events</h3>
+                            <span>View all →</span>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="empty-state">
+                                <div class="empty-icon">📅</div>
+                                <h4>No upcoming events shown</h4>
+                                <p>Browse activities or create a new event to get started.</p>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="matching.html" class="dashboard-card">
+                        <div class="card-header">
+                            <h3>Suggested matches</h3>
+                            <span>See all →</span>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="empty-state">
+                                <div class="empty-icon">🤝</div>
+                                <h4>No matches shown yet</h4>
+                                <p>Use the matching page to find students with similar activity interests.</p>
+                            </div>
+                        </div>
+                    </a>
+                </section>
+
+                <section class="lower-grid">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3>My profile</h3>
+                            <span>View →</span>
+                        </div>
+
+                        <div class="profile-summary">
+                            <div class="profile-row">
+                                <div class="profile-large-avatar" id="profileInitials">U</div>
+                                <div>
+                                    <div class="profile-name-large" id="profileNameLarge">User</div>
+                                    <div class="profile-info">Student account</div>
+                                </div>
+                            </div>
+
+                            <div class="profile-mini-stats">
+                                <div class="profile-mini-stat">
+                                    <strong>0</strong>
+                                    <span>Events</span>
+                                </div>
+                                <div class="profile-mini-stat">
+                                    <strong>0</strong>
+                                    <span>Matches</span>
+                                </div>
+                                <div class="profile-mini-stat">
+                                    <strong>0</strong>
+                                    <span>Penalties</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="locations.html" class="dashboard-card">
+                        <div class="card-header">
+                            <h3>Facilities</h3>
+                            <span>Explore →</span>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="facility-row">
+                                <div class="facility-left">
+                                    <div>
+                                        <div class="row-title">Lyon Center</div>
+                                        <div class="facility-stars">★★★★★</div>
+                                    </div>
+                                </div>
+                                <span class="status-pill">Open</span>
+                            </div>
+
+                            <div class="facility-row">
+                                <div class="facility-left">
+                                    <div>
+                                        <div class="row-title">Village Gym</div>
+                                        <div class="facility-stars">★★★★☆</div>
+                                    </div>
+                                </div>
+                                <span class="status-pill">Open</span>
+                            </div>
+
+                            <div class="facility-row">
+                                <div class="facility-left">
+                                    <div>
+                                        <div class="row-title">Lyon Pool</div>
+                                        <div class="facility-stars">★★★★★</div>
+                                    </div>
+                                </div>
+                                <span class="status-pill">Open</span>
+                            </div>
+
+                            <div class="facility-row">
+                                <div class="facility-left">
+                                    <div>
+                                        <div class="row-title">Galen Center</div>
+                                        <div class="facility-stars">★★★☆☆</div>
+                                    </div>
+                                </div>
+                                <span class="status-pill">Open</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3>Recent penalties</h3>
+                            <span>Details →</span>
+                        </div>
+
+                        <div class="penalty-empty">
+                            <div>
+                                <div class="penalty-check">✓</div>
+                                <div>No penalties on record</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
 
     <script src="dashboard.js"></script>
 </body>
