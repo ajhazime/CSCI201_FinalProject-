@@ -1,6 +1,9 @@
+com/usc/campusactivities/EventServlet$1.class
 com/usc/campusactivities/EventServlet.class
 com/usc/campusactivities/MatchingEngine.class
+com/usc/campusactivities/EventDAO$JoinEventStatus.class
 com/usc/campusactivities/UserDAO.class
+com/usc/campusactivities/EventDAO$LeaveEventResult.class
 com/usc/campusactivities/EventDAO.class
 com/usc/campusactivities/Event.class
 com/usc/campusactivities/MatchServlet.class
@@ -10,4 +13,5 @@ com/usc/campusactivities/LoginServlet.class
 com/usc/campusactivities/RegisterServlet.class
 com/usc/campusactivities/LogoutServlet.class
 com/usc/campusactivities/DBUtil.class
+com/usc/campusactivities/EventDAO$CancelEventStatus.class
 com/usc/campusactivities/MatchingEngine$UserMatch.class
