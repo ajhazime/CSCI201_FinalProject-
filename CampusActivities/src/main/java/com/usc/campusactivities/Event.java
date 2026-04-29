@@ -1,5 +1,10 @@
 package com.usc.campusactivities;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
+import java.util.List;
+
 public class Event {
     private int id;
     private String eventName;
@@ -52,4 +57,49 @@ public class Event {
 
     public int getCreatorId() { return creatorId; }
     public void setCreatorId(int creatorId) { this.creatorId = creatorId; }
+
+    public boolean isFull() {
+        return currentParticipants >= maxParticipants;
+    }
+
+    public int remainingSpots() {
+        return Math.max(maxParticipants - currentParticipants, 0);
+    }
+
+    public static boolean hasTimeConflict(List<Event> userEvents, Event newEvent) {
+        if (userEvents == null || newEvent == null || newEvent.getDate() == null
+                || newEvent.getTime() == null || newEvent.getEndTime() == null) {
+            return false;
+        }
+
+        try {
+            LocalDate newDate = LocalDate.parse(newEvent.getDate());
+            LocalTime newStart = LocalTime.parse(newEvent.getTime());
+            LocalTime newEnd = LocalTime.parse(newEvent.getEndTime());
+
+            for (Event existing : userEvents) {
+                if (existing == null || existing.getDate() == null
+                        || existing.getTime() == null || existing.getEndTime() == null) {
+                    continue;
+                }
+
+                LocalDate existingDate = LocalDate.parse(existing.getDate());
+                if (!existingDate.equals(newDate)) {
+                    continue;
+                }
+
+                LocalTime existingStart = LocalTime.parse(existing.getTime());
+                LocalTime existingEnd = LocalTime.parse(existing.getEndTime());
+
+                // Overlap rule: (startA < endB) AND (endA > startB)
+                if (newStart.isBefore(existingEnd) && newEnd.isAfter(existingStart)) {
+                    return true;
+                }
+            }
+        } catch (DateTimeParseException e) {
+            return false;
+        }
+
+        return false;
+    }
 }

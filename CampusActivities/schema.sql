@@ -22,6 +22,7 @@ CREATE TABLE events (
     max_participants INT NOT NULL,
     current_participants INT DEFAULT 0,
     creator_id INT,
+    INDEX idx_events_date_time (date, time, end_time),
     FOREIGN KEY (creator_id) REFERENCES users(id)
 );
 
@@ -39,6 +40,7 @@ CREATE TABLE event_participants (
     role VARCHAR(20) DEFAULT 'PARTICIPANT',
     joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uniq_event_user (event_id, user_id),
+    INDEX idx_event_participants_user_event (user_id, event_id),
     FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );

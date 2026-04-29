@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USC FIT - Find Your Match</title>
+    <style>
+        :root {
+            --usc-cardinal: #992233;
+            --usc-gold: #FFCC00;
+            --bg-dark: #121212;
+            --card-white: #ffffff;
+            --text-main: #333;
+            --text-muted: #666;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: var(--bg-dark);
+            background-image: repeating-linear-gradient(45deg, #1a1a1a 0px, #1a1a1a 2px, transparent 2px, transparent 10px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 40px 20px;
+            color: white;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: var(--usc-gold);
+            font-size: 28px;
+            letter-spacing: 2px;
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        .header p {
+            font-size: 10px;
+            color: #888;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+
+        .card {
+            background: var(--card-white);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 600px;
+            color: var(--text-main);
+        }
+
+        .card h2 {
+            margin: 0 0 6px 0;
+            font-size: 22px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        #status {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        #results {
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            background: #f8f8f8;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            font-size: 13px;
+            color: var(--usc-cardinal);
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>USC FIT</h1>
+        <p>Campus Fitness Platform</p>
+    </div>
+
+    <div class="card">
+        <h2>Find Your Match</h2>
+        <p class="subtitle">Trojans who fit your schedule and skill level</p>
+
+        <div id="status">Loading matches...</div>
+        <div id="results"></div>
+
+        <a href="dashboard.html" class="back-link">← Back to Dashboard</a>
+    </div>
+
+    <script src="matching.js"></script>
+</body>
+</html>
