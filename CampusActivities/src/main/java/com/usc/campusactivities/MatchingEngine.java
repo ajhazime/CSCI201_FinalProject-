@@ -197,10 +197,10 @@ public class MatchingEngine {
      */
     private List<User> fetchAllOtherUsers(User currentUser) {
         List<User> users = new ArrayList<>();
-        String sql = "SELECT userID, username, firstName, lastName, interests, skillLevel, "
+        String sql = "SELECT id, username, firstName, lastName, interests, skill_level, "
                    + "       avgRating, preferredLocations, penaltyTracked "
                    + "FROM users "
-                   + "WHERE userID != ? AND penaltyTracked = false";
+                   + "WHERE id != ? AND penaltyTracked = false";
 
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -208,12 +208,12 @@ public class MatchingEngine {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     User u = new User();
-                    u.setId(rs.getInt("userID"));
+                    u.setId(rs.getInt("id"));
                     u.setUsername(rs.getString("username"));
                     u.setFirstName(rs.getString("firstName"));
                     u.setLastName(rs.getString("lastName"));
                     u.setInterests(rs.getString("interests"));
-                    u.setSkillLevel(rs.getString("skillLevel"));
+                    u.setSkillLevel(rs.getString("skill_level"));
                     u.setAvgRating(rs.getDouble("avgRating"));
                     u.setPreferredLocations(rs.getString("preferredLocations"));
                     u.setPenaltyTracked(rs.getBoolean("penaltyTracked"));
