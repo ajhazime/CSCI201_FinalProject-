@@ -68,9 +68,7 @@ function buildMatchCard(match) {
     viewBtn.className = "card-action card-action-secondary";
     viewBtn.textContent = "View Profile";
     viewBtn.addEventListener("click", function () {
-        // TODO: route to a real profile page once the team builds it
-        // e.g. window.location.href = "profile.html?userId=" + match.userID;
-        alert("Profile view for " + match.username + " coming soon.");
+        window.location.href = "profile.html?userId=" + match.userID;
     });
 
     const inviteBtn = document.createElement("button");

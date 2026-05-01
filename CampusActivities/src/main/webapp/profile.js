@@ -1,29 +1,53 @@
-const user = JSON.parse(sessionStorage.getItem("user"));
+const sessionUser = JSON.parse(sessionStorage.getItem("user"));
 
-if (!user) {
+if (!sessionUser) {
     window.location.href = "login.html";
+}
+
+document.getElementById("sidebarUsername").textContent = sessionUser ? sessionUser.username : "User";
+document.getElementById("sidebarInitials").textContent = sessionUser ? getInitials(sessionUser.username) : "U";
+
+const params = new URLSearchParams(window.location.search);
+const viewingUserId = params.get("userId");
+
+if (viewingUserId) {
+    fetch("/CampusActivities/api/users?id=" + viewingUserId)
+        .then(function(response) {
+            if (response.status === 401) {
+                window.location.href = "login.html";
+                return;
+            }
+            if (response.status === 404) {
+                document.getElementById("profileUsername").textContent = "User not found";
+                return;
+            }
+            return response.json();
+        })
+        .then(function(data) {
+            if (data) populateProfile(data);
+        })
+        .catch(function() {
+            document.getElementById("profileUsername").textContent = "Error loading profile";
+        });
 } else {
+    populateProfile(sessionUser);
+}
+
+function populateProfile(user) {
     const username = user.username || "User";
     const email = user.email || "No email available";
     const skillLevel = user.skill_level || user.skillLevel || "Student";
     const penalties = user.penalties !== undefined && user.penalties !== null ? user.penalties : 0;
     const interests = parseInterests(user.interests);
 
-    document.getElementById("sidebarUsername").textContent = username;
     document.getElementById("profileUsername").textContent = username;
     document.getElementById("infoUsername").textContent = username;
-
     document.getElementById("profileEmail").textContent = email;
     document.getElementById("infoEmail").textContent = email;
-
     document.getElementById("profileSkillLevel").textContent = skillLevel;
     document.getElementById("infoSkillLevel").textContent = skillLevel;
-
     document.getElementById("infoPenalties").textContent = penalties;
-
-    const initials = getInitials(username);
-    document.getElementById("sidebarInitials").textContent = initials;
-    document.getElementById("profileInitials").textContent = initials;
+    document.getElementById("profileInitials").textContent = getInitials(username);
 
     renderInterests(interests);
 }
