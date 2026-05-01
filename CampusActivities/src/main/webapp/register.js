@@ -48,7 +48,11 @@ registerForm.addEventListener('submit', function(e) {
         skillLevel: params.get('skillLevel')
     });
     
-    fetch('/CampusActivities/register', { method: 'POST', body: params })
+    fetch(campusFitUrl('register'), {
+        method: 'POST',
+        body: params,
+        credentials: 'same-origin'
+    })
         .then(res => {
             console.log("Response status:", res.status);
             return res.text().then(text => {
