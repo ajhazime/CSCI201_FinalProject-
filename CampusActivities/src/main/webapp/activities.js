@@ -1,7 +1,16 @@
-const user = JSON.parse(sessionStorage.getItem("user"));
+let user = null;
+try {
+    const raw = sessionStorage.getItem("user");
+    if (raw) {
+        user = JSON.parse(raw);
+    }
+} catch (e) {
+    user = null;
+}
 
 if (!user) {
-    window.location.href = "login.html";
+    window.location.href =
+        typeof campusFitUrl === "function" ? campusFitUrl("login.html") : "login.html";
 } else {
     const username = user.username || "User";
 
@@ -210,7 +219,12 @@ function showError(message) {
 }
 
 function fetchAndRender() {
-    fetch("events")
+    var url = typeof campusFitUrl === "function" ? campusFitUrl("events") : "events";
+    if (calHint) {
+        calHint.textContent = "Loading events…";
+    }
+
+    fetch(url, { credentials: "same-origin" })
         .then(function(res) {
             if (!res.ok) {
                 throw new Error("Could not load activities.");
@@ -219,10 +233,20 @@ function fetchAndRender() {
         })
         .then(function(events) {
             allEvents = Array.isArray(events) ? events : [];
+            if (calHint) {
+                calHint.textContent = selectedDate
+                    ? `Showing events for ${selectedDate}. Click “All events” to clear the filter.`
+                    : "Click a day to filter the table below.";
+            }
             renderCalendar();
             renderTable();
         })
         .catch(function(error) {
+            allEvents = [];
+            renderCalendar();
+            if (calHint) {
+                calHint.textContent = "Could not load events; calendar is empty.";
+            }
             showError(error.message);
         });
 }
@@ -252,6 +276,9 @@ if (calToday) {
 if (calAll) {
     calAll.addEventListener("click", () => setSelectedDate(null));
 }
+
+// Month grid renders immediately even if /events is slow or fails — avoid a blank calendar.
+renderCalendar();
 
 fetchAndRender();
 
