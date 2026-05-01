@@ -1,19 +1,3 @@
-(function cleanupAfterSignOut() {
-    try {
-        var params = new URLSearchParams(window.location.search);
-        if (params.has('signedOut')) {
-            sessionStorage.removeItem('user');
-            localStorage.removeItem('user');
-            params.delete('signedOut');
-            var qs = params.toString();
-            var url = window.location.pathname + (qs ? '?' + qs : '');
-            window.history.replaceState({}, document.title, url);
-        }
-    } catch (e) {
-        /* ignore */
-    }
-})();
-
 document.getElementById('loginForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const params = new URLSearchParams(new FormData(this));
