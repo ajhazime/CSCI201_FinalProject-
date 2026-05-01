@@ -3,139 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>USC FIT - Activities</title>
-    <style>
-        :root {
-            --usc-cardinal: #992233;
-            --usc-gold: #FFCC00;
-            --bg-dark: #121212;
-            --card-white: #ffffff;
-            --text-main: #333;
-            --text-muted: #666;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-            background-color: var(--bg-dark);
-            background-image: repeating-linear-gradient(45deg, #1a1a1a 0px, #1a1a1a 2px, transparent 2px, transparent 10px);
-            margin: 0;
-            min-height: 100vh;
-            color: white;
-            padding: 24px 18px 40px;
-        }
-
-        .page {
-            max-width: 980px;
-            margin: 0 auto;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 18px;
-        }
-
-        .header h1 {
-            color: var(--usc-gold);
-            font-size: 28px;
-            letter-spacing: 2px;
-            margin: 0;
-            text-transform: uppercase;
-        }
-
-        .header p {
-            font-size: 10px;
-            color: #888;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            margin-top: 5px;
-        }
-
-        .toolbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 14px;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .toolbar .title {
-            font-size: 20px;
-            font-weight: 700;
-        }
-
-        .toolbar a {
-            text-decoration: none;
-            background-color: var(--usc-cardinal);
-            color: white;
-            border-radius: 8px;
-            padding: 10px 14px;
-            font-weight: 700;
-            font-size: 14px;
-        }
-
-        .card {
-            background: var(--card-white);
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.45);
-            color: var(--text-main);
-            overflow: hidden;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        thead th {
-            text-align: left;
-            font-size: 12px;
-            letter-spacing: .4px;
-            color: var(--text-muted);
-            background: #fafafa;
-            border-bottom: 1px solid #ececec;
-            padding: 12px 14px;
-        }
-
-        tbody td {
-            padding: 13px 14px;
-            border-bottom: 1px solid #f0f0f0;
-            font-size: 14px;
-        }
-
-        tbody tr:last-child td {
-            border-bottom: none;
-        }
-
-        #emptyState {
-            display: none;
-            padding: 18px 14px;
-            color: var(--text-muted);
-            font-size: 14px;
-        }
-    </style>
+    <title>USC FIT Activities</title>
+    <link rel="stylesheet" href="activities.css">
 </head>
 <body>
-    <div class="page">
-        <div class="header">
-            <h1>USC FIT</h1>
-            <p>Campus Fitness Platform</p>
-        </div>
+    <div class="activities-wrapper">
+        <aside class="activities-sidebar">
+            <div>
+                <div class="sidebar-brand">
+                    <h1>USC FIT</h1>
+                    <p>CAMPUS FITNESS</p>
+                </div>
 
-        <div class="toolbar">
-            <div class="title">Campus Activities</div>
-            <a href="createEvent.html">Create Event</a>
-        </div>
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar" id="sidebarInitials">U</div>
+                    <div>
+                        <div class="sidebar-user-name" id="sidebarUsername">User</div>
+                        <div class="sidebar-user-level">Student</div>
+                    </div>
+                </div>
 
-        <div class="card">
-            <table>
-                <thead>
-                    <tr><th>Activity</th><th>Location</th><th>Date</th><th>Time</th><th>Spots</th></tr>
-                </thead>
-                <tbody id="eventsBody"></tbody>
-            </table>
-            <div id="emptyState">No events yet. Be the first to create one.</div>
-        </div>
+                <div class="sidebar-section">MAIN</div>
+                <a href="dashboard.html" class="sidebar-link">Dashboard</a>
+                <a href="activities.html" class="sidebar-link active">Events</a>
+                <a href="matching.html" class="sidebar-link">My Matches</a>
+
+                <div class="sidebar-section">EXPLORE</div>
+                <a href="locations.html" class="sidebar-link">Facilities</a>
+
+                <div class="sidebar-section">ACCOUNT</div>
+                <a href="profile.html" class="sidebar-link">Profile</a>
+            </div>
+
+            <a href="#" id="logoutLink" class="logout-button">Sign out</a>
+        </aside>
+
+        <main class="activities-content">
+            <header class="activities-header">
+                <div>
+                    <h1>Activities</h1>
+                    <p>Browse available campus activities and events.</p>
+                </div>
+
+                <div class="header-actions">
+                    <a href="dashboard.html" class="header-button">Back to dashboard</a>
+                    <a href="createEvent.html" class="header-button primary">+ Create event</a>
+                </div>
+            </header>
+
+            <section class="activities-main">
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <div class="summary-label">Available Events</div>
+                        <div class="summary-value" id="eventCount">0</div>
+                    </div>
+
+                    <div class="summary-card">
+                        <div class="summary-label">Open Spots</div>
+                        <div class="summary-value" id="openSpotCount">0</div>
+                    </div>
+
+                    <div class="summary-card">
+                        <div class="summary-label">Locations</div>
+                        <div class="summary-value" id="locationCount">0</div>
+                    </div>
+                </div>
+
+                <div class="events-card">
+                    <div class="events-card-header">
+                        <div>
+                            <h2>Campus Activities</h2>
+                            <p>See activity type, location, date, time, and spots available.</p>
+                        </div>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table class="events-table">
+                            <thead>
+                                <tr>
+                                    <th>Activity</th>
+                                    <th>Location</th>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Spots</th>
+                                </tr>
+                            </thead>
+                            <tbody id="eventsBody">
+                                <tr>
+                                    <td colspan="5" class="loading-cell">Loading activities...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
     </div>
 
     <script src="activities.js"></script>
