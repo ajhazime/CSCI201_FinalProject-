@@ -8,28 +8,17 @@
         }
     }
 
-    function redirectToLogin() {
-        clearClientStorage();
-        var target =
-            typeof campusFitUrl === "function" ? campusFitUrl("login.html") : "login.html";
-        window.location.replace(target);
-    }
-
-    /** Called from sidebar "Sign out" links. Works with any servlet context path. */
+    /**
+     * Full page navigation to /logout (session cleared server-side, then redirected to login).
+     * Works even when fetch behaves oddly with redirects/caching.
+     */
     window.performLogout = function (ev) {
         if (ev) {
             ev.preventDefault();
         }
+        clearClientStorage();
         var url = typeof campusFitUrl === "function" ? campusFitUrl("logout") : "logout";
-        fetch(url, {
-            method: "GET",
-            credentials: "same-origin",
-            cache: "no-store"
-        })
-            .catch(function () {
-                /* still clear UI + client state */
-            })
-            .finally(redirectToLogin);
+        window.location.assign(url);
     };
 
     function wireLogoutLink() {
