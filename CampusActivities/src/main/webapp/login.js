@@ -1,7 +1,11 @@
 document.getElementById('loginForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const params = new URLSearchParams(new FormData(this));
-    fetch('/CampusActivities/login', { method: 'POST', body: params })
+    fetch(campusFitUrl('login'), {
+        method: 'POST',
+        body: params,
+        credentials: 'same-origin'
+    })
         .then(res => res.json())
         .then(data => {
             if (data.success) {

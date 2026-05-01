@@ -17,20 +17,6 @@ if (!user) {
     }
 }
 
-document.getElementById("logoutLink").addEventListener("click", function(e) {
-    e.preventDefault();
-
-    fetch("/CampusActivities/logout")
-        .then(function () {
-            sessionStorage.removeItem("user");
-            window.location.href = "login.html";
-        })
-        .catch(function () {
-            sessionStorage.removeItem("user");
-            window.location.href = "login.html";
-        });
-});
-
 const calTitle = document.getElementById("calTitle");
 const calGrid = document.getElementById("calGrid");
 const calPrev = document.getElementById("calPrev");

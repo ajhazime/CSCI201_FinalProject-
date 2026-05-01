@@ -28,20 +28,6 @@ if (!user) {
     renderInterests(interests);
 }
 
-document.getElementById("logoutLink").addEventListener("click", function(e) {
-    e.preventDefault();
-
-    fetch("/CampusActivities/logout")
-        .then(function () {
-            sessionStorage.removeItem("user");
-            window.location.href = "login.html";
-        })
-        .catch(function () {
-            sessionStorage.removeItem("user");
-            window.location.href = "login.html";
-        });
-});
-
 function parseInterests(interests) {
     if (!interests) {
         return [];
