@@ -80,6 +80,20 @@ public class EventDAO {
         return false;
     }
 
+    public static int countFacilities() {
+        String sql = "SELECT COUNT(*) FROM facilities";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
     public static boolean insertEventWithHost(Event event) {
         return insertEventWithHostAndInvites(event, null);
     }
