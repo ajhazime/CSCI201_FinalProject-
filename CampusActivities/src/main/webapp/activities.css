@@ -255,6 +255,8 @@ a {
     padding: 18px 24px 20px 24px;
     border-bottom: 1px solid var(--border);
     background: #fbfaf9;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .calendar-header {
@@ -306,8 +308,9 @@ a {
 
 .cal-grid {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: 8px;
+    min-width: 520px;
 }
 
 .cal-dow {
@@ -375,8 +378,8 @@ a {
 
 .cal-pill {
     border-radius: 999px;
-    padding: 6px 9px;
-    font-size: 12px;
+    padding: 6px 6px;
+    font-size: 11px;
     font-weight: 800;
     background: rgba(157, 34, 53, 0.08);
     color: var(--usc-cardinal);
