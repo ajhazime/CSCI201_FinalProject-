@@ -21,8 +21,6 @@ public class LogoutServlet extends HttpServlet {
     }
 
     private void logout(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
         response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
         response.setHeader("Pragma", "no-cache");
 
@@ -31,10 +29,18 @@ public class LogoutServlet extends HttpServlet {
             session.invalidate();
         }
 
-        JsonObject jsonResponse = new JsonObject();
-        jsonResponse.addProperty("success", true);
-        jsonResponse.addProperty("message", "Logout successful");
+        // Prefer a normal browser redirect so sign-out cannot get "stuck" on a fetch/JSON-only response.
+        if ("1".equals(request.getParameter("json"))) {
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            JsonObject jsonResponse = new JsonObject();
+            jsonResponse.addProperty("success", true);
+            jsonResponse.addProperty("message", "Logout successful");
+            response.getWriter().write(jsonResponse.toString());
+            return;
+        }
 
-        response.getWriter().write(jsonResponse.toString());
+        String login = response.encodeRedirectURL(request.getContextPath() + "/login.html?signedOut=1");
+        response.sendRedirect(login);
     }
 }
