@@ -77,6 +77,22 @@
                         </div>
                     </div>
 
+                    <div class="calendar-card">
+                        <div class="calendar-header">
+                            <div class="calendar-left">
+                                <button id="calPrev" class="cal-nav" type="button">‹</button>
+                                <strong id="calTitle">Month YYYY</strong>
+                                <button id="calNext" class="cal-nav" type="button">›</button>
+                            </div>
+                            <div class="calendar-right">
+                                <button id="calToday" class="cal-action" type="button">Today</button>
+                                <button id="calAll" class="cal-action primary" type="button">All events</button>
+                            </div>
+                        </div>
+                        <div id="calGrid" class="cal-grid"></div>
+                        <div class="cal-hint" id="calHint">Click a day to filter the table below.</div>
+                    </div>
+
                     <div class="table-wrapper">
                         <table class="events-table">
                             <thead>

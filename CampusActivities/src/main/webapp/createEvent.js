@@ -17,6 +17,39 @@ const locationOptions = [
     "PED South Gym"
 ];
 
+const user = JSON.parse(sessionStorage.getItem("user"));
+if (!user) {
+    window.location.href = "login.html";
+} else {
+    const username = user.username || "User";
+    const sidebarUsername = document.getElementById("sidebarUsername");
+    const sidebarInitials = document.getElementById("sidebarInitials");
+
+    if (sidebarUsername) {
+        sidebarUsername.textContent = username;
+    }
+
+    if (sidebarInitials) {
+        sidebarInitials.textContent = getInitials(username);
+    }
+}
+
+const logoutLink = document.getElementById("logoutLink");
+if (logoutLink) {
+    logoutLink.addEventListener("click", function (e) {
+        e.preventDefault();
+        fetch("/CampusActivities/logout")
+            .then(function () {
+                sessionStorage.removeItem("user");
+                window.location.href = "login.html";
+            })
+            .catch(function () {
+                sessionStorage.removeItem("user");
+                window.location.href = "login.html";
+            });
+    });
+}
+
 const activitySelect = document.getElementById("activityType");
 const locationSelect = document.getElementById("location");
 const dateInput = document.getElementById("date");
@@ -30,6 +63,109 @@ const calendarNext = document.getElementById("calendarNext");
 let calendarMonth = new Date();
 calendarMonth.setDate(1);
 
+const inviteSearch = document.getElementById("inviteSearch");
+const inviteResults = document.getElementById("inviteResults");
+const inviteSuggestions = document.getElementById("inviteSuggestions");
+const inviteSelected = document.getElementById("inviteSelected");
+const inviteeIdsInput = document.getElementById("inviteeIds");
+const inviteStatus = document.getElementById("inviteStatus");
+const selectedInvitees = new Map(); // id -> user
+
+function getInitials(name) {
+    const parts = String(name).trim().split(/\s+/);
+    if (parts.length === 1) {
+        return parts[0].substring(0, 2).toUpperCase();
+    }
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+}
+
+function renderInviteSelected() {
+    if (!inviteSelected || !inviteeIdsInput) return;
+    inviteSelected.innerHTML = "";
+
+    const ids = Array.from(selectedInvitees.keys());
+    inviteeIdsInput.value = ids.join(",");
+
+    if (ids.length === 0) {
+        inviteSelected.innerHTML = `<div class="small-note">No invitees selected.</div>`;
+        return;
+    }
+
+    ids.forEach((id) => {
+        const u = selectedInvitees.get(id);
+        const row = document.createElement("div");
+        row.className = "invite-row";
+        row.innerHTML = `
+            <div>
+                <strong>${escapeHtml(u.username || "User")}</strong>
+                <small>${escapeHtml(u.email || "")}</small>
+            </div>
+        `;
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = "Remove";
+        btn.addEventListener("click", () => {
+            selectedInvitees.delete(id);
+            renderInviteSelected();
+        });
+        row.appendChild(btn);
+        inviteSelected.appendChild(row);
+    });
+}
+
+function renderInviteResults(users) {
+    if (!inviteResults) return;
+    inviteResults.innerHTML = "";
+
+    if (!users || users.length === 0) {
+        inviteResults.innerHTML = `<div class="small-note">No users found.</div>`;
+        return;
+    }
+
+    users.forEach((u) => {
+        const id = Number(u.id);
+        const row = document.createElement("div");
+        row.className = "invite-row";
+        row.innerHTML = `
+            <div>
+                <strong>${escapeHtml(u.username || "User")}</strong>
+                <small>${escapeHtml(u.email || "")}</small>
+            </div>
+        `;
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        if (selectedInvitees.has(id)) {
+            btn.textContent = "Selected";
+            btn.className = "primary";
+            btn.disabled = true;
+        } else {
+            btn.textContent = "Invite";
+            btn.className = "primary";
+            btn.addEventListener("click", () => {
+                selectedInvitees.set(id, u);
+                renderInviteSelected();
+                // re-render to reflect "Selected"
+                const current = Array.from(inviteResults.querySelectorAll(".invite-row"));
+                if (current.length > 0) {
+                    renderInviteResults(users);
+                }
+            });
+        }
+        row.appendChild(btn);
+        inviteResults.appendChild(row);
+    });
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
 function populateSelect(select, options) {
     select.innerHTML = "";
     options.forEach((option) => {
@@ -37,6 +173,98 @@ function populateSelect(select, options) {
         el.value = option;
         el.textContent = option;
         select.appendChild(el);
+    });
+}
+
+function renderInviteSuggestions(users) {
+    if (!inviteSuggestions) return;
+    inviteSuggestions.innerHTML = "";
+    if (!users || users.length === 0) {
+        inviteSuggestions.innerHTML = `<div class="small-note">No suggestions yet. Try searching below.</div>`;
+        return;
+    }
+
+    users.forEach((u) => {
+        const id = Number(u.id);
+        const row = document.createElement("div");
+        row.className = "invite-row";
+        row.innerHTML = `
+            <div>
+                <strong>${escapeHtml(u.username || "User")}</strong>
+                <small>${escapeHtml(u.email || "")}</small>
+            </div>
+        `;
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        if (selectedInvitees.has(id)) {
+            btn.textContent = "Selected";
+            btn.className = "primary";
+            btn.disabled = true;
+        } else {
+            btn.textContent = "Invite";
+            btn.className = "primary";
+            btn.addEventListener("click", () => {
+                selectedInvitees.set(id, u);
+                renderInviteSelected();
+                renderInviteSuggestions(users);
+            });
+        }
+        row.appendChild(btn);
+        inviteSuggestions.appendChild(row);
+    });
+}
+
+async function loadInviteSuggestions() {
+    if (!inviteSuggestions) return;
+    inviteSuggestions.innerHTML = `<div class="small-note">Loading suggestions...</div>`;
+    try {
+        const res = await fetch(`/CampusActivities/api/users?limit=8`);
+        if (res.status === 401) {
+            window.location.href = "login.html";
+            return;
+        }
+        if (!res.ok) {
+            inviteSuggestions.innerHTML = `<div class="small-note">Couldn’t load suggestions (server error).</div>`;
+            return;
+        }
+        const users = await res.json();
+        renderInviteSuggestions(users);
+    } catch (e) {
+        inviteSuggestions.innerHTML = `<div class="small-note">Couldn’t load suggestions.</div>`;
+    }
+}
+
+let inviteSearchTimer = null;
+function wireInviteSearch() {
+    if (!inviteSearch || !inviteStatus) return;
+    renderInviteSelected();
+
+    inviteSearch.addEventListener("input", () => {
+        if (inviteSearchTimer) {
+            window.clearTimeout(inviteSearchTimer);
+        }
+        inviteSearchTimer = window.setTimeout(async () => {
+            const q = inviteSearch.value.trim();
+            if (q.length < 2) {
+                inviteStatus.textContent = "Type at least 2 characters to search.";
+                if (inviteResults) inviteResults.innerHTML = "";
+                return;
+            }
+            inviteStatus.textContent = "Searching...";
+            try {
+                const res = await fetch(`/CampusActivities/api/users?query=${encodeURIComponent(q)}&limit=15`);
+                if (res.status === 401) {
+                    window.location.href = "login.html";
+                    return;
+                }
+                const users = await res.json();
+                inviteStatus.textContent = `Found ${users.length} user${users.length === 1 ? "" : "s"}.`;
+                renderInviteResults(users);
+            } catch (e) {
+                inviteStatus.textContent = "Error searching users.";
+            }
+        }, 250);
     });
 }
 
@@ -162,6 +390,8 @@ document.querySelectorAll(".quick-tag").forEach((btn) => {
 
 updatePreview();
 renderCalendar();
+wireInviteSearch();
+loadInviteSuggestions();
 
 calendarPrev.addEventListener("click", () => {
     calendarMonth.setMonth(calendarMonth.getMonth() - 1);
@@ -178,12 +408,16 @@ dateInput.addEventListener("change", renderCalendar);
 document.getElementById("createEventForm").addEventListener("submit", async function(e) {
     e.preventDefault();
     const errorEl = document.getElementById("error");
-    errorEl.textContent = "";
+    if (errorEl) {
+        errorEl.textContent = "";
+    }
 
     const activityType = activitySelect.value;
     const location = locationSelect.value;
     if (!activityType || !location) {
-        errorEl.textContent = "Please choose an activity and a USC facility.";
+        if (errorEl) {
+            errorEl.textContent = "Please choose an activity and a USC facility.";
+        }
         return;
     }
 
@@ -200,6 +434,8 @@ document.getElementById("createEventForm").addEventListener("submit", async func
     if (data.success) {
         window.location.href = "activities.html";
     } else {
-        errorEl.textContent = data.message;
+        if (errorEl) {
+            errorEl.textContent = data.message;
+        }
     }
 });
