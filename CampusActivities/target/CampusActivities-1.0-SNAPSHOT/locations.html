@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USC FIT - Facilities</title>
+
+    <link rel="stylesheet" href="locations.css">
+
+    <!-- Leaflet map -->
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin=""
+    />
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""
+    ></script>
+
+    <script src="locations.js" defer></script>
+</head>
+<body>
+    <div class="app-shell">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div>
+                <div class="brand">
+                    <h1>USC FIT</h1>
+                    <p>CAMPUS FITNESS</p>
+                </div>
+
+                <div class="profile-card">
+                    <div class="profile-avatar" id="profileInitials">GF</div>
+                    <div>
+                        <div class="profile-name" id="sidebarName">Guest User</div>
+                        <div class="profile-level">Intermediate</div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section-title">MAIN</div>
+                <nav class="sidebar-nav">
+                    <a href="dashboard.html" class="sidebar-link">Dashboard</a>
+                    <a href="activities.html" class="sidebar-link">Events</a>
+                    <a href="matching.html" class="sidebar-link">My Matches</a>
+                    <a href="#" class="sidebar-link">Calendar</a>
+
+                    <div class="sidebar-section-title secondary">EXPLORE</div>
+                    <a href="locations.html" class="sidebar-link active">Facilities</a>
+                    <a href="#" class="sidebar-link">Groups</a>
+
+                    <div class="sidebar-section-title secondary">ACCOUNT</div>
+                    <a href="profile.html" class="sidebar-link">Profile</a>
+                    <a href="#" class="sidebar-link">Penalties</a>
+                </nav>
+            </div>
+
+            <a href="#" id="logoutLink" class="sidebar-logout">Sign out</a>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div>
+                    <h2>Facilities</h2>
+                    <p>USC campus athletic locations</p>
+                </div>
+
+                <div class="top-actions">
+                    <a href="locations.html" class="light-button">Browse facilities</a>
+                    <a href="createEvent.html" class="primary-button">+ Create event</a>
+                </div>
+            </header>
+
+            <div id="messageBox" class="message-box"></div>
+
+            <section class="top-grid">
+                <div class="map-card">
+                    <div id="map"></div>
+
+                    <div class="map-legend">
+                        <div><span class="legend-dot selected-dot"></span> Selected</div>
+                        <div><span class="legend-dot facility-dot"></span> Facility</div>
+                    </div>
+                </div>
+
+                <div class="facility-list-card">
+                    <div id="facilityList" class="facility-list">
+                        <div class="loading-card">Loading facilities...</div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="detailPanel" class="detail-panel">
+                <div class="loading-card">Loading facility details...</div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

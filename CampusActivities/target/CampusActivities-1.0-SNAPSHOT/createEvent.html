@@ -157,15 +157,66 @@
         }
 
         .calendar-box {
-            border: 1px dashed #3a3d44;
+            border: 1px solid #353943;
             border-radius: 8px;
-            height: 196px;
+            padding: 10px;
+            margin-top: 8px;
+            background: rgba(10,12,16,0.45);
+        }
+
+        .calendar-header {
             display: flex;
             align-items: center;
-            justify-content: center;
-            color: #8a8f9b;
+            justify-content: space-between;
+            color: #d5d7de;
             font-size: 13px;
-            background: rgba(10,12,16,0.45);
+            margin-bottom: 8px;
+        }
+
+        .calendar-nav {
+            border: none;
+            background: transparent;
+            color: #d5d7de;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            font-size: 12px;
+        }
+
+        .calendar-day-label {
+            text-align: center;
+            color: #8f94a3;
+            padding: 3px 0;
+            font-size: 11px;
+        }
+
+        .calendar-day {
+            border: 1px solid transparent;
+            background: transparent;
+            color: #d5d7de;
+            border-radius: 6px;
+            height: 28px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .calendar-day:hover {
+            border-color: #454a57;
+        }
+
+        .calendar-day.muted {
+            color: #636a78;
+        }
+
+        .calendar-day.selected {
+            background: var(--usc-cardinal);
+            border-color: var(--usc-cardinal);
+            color: white;
         }
 
         .capacity-control {
@@ -229,22 +280,30 @@
             font-weight: 600;
         }
 
-        .suggestion {
-            width: 100%;
-            text-align: left;
-            border: 1px solid #32363f;
-            border-radius: 9px;
-            background: rgba(18,21,27,0.9);
-            color: #fff;
-            padding: 10px;
-            margin-bottom: 8px;
+        .tag-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .quick-tag {
+            border: 1px solid #3a3f49;
+            background: #1a1f29;
+            color: #e7e9ef;
+            border-radius: 999px;
+            padding: 7px 12px;
+            font-size: 13px;
             cursor: pointer;
         }
 
-        .suggestion small {
-            display: block;
-            color: #9ea3af;
-            margin-top: 2px;
+        .quick-tag:hover {
+            border-color: #545b68;
+        }
+
+        .quick-tag.active {
+            background: #8f2435;
+            border-color: #8f2435;
+            color: white;
         }
 
         .tips {
@@ -328,7 +387,14 @@
                             <div>
                                 <label for="date">Date</label>
                                 <input id="date" type="date" name="date" required>
-                                <div class="calendar-box">Calendar view placeholder</div>
+                                <div class="calendar-box">
+                                    <div class="calendar-header">
+                                        <button id="calendarPrev" class="calendar-nav" type="button">‹</button>
+                                        <strong id="calendarTitle">Month YYYY</strong>
+                                        <button id="calendarNext" class="calendar-nav" type="button">›</button>
+                                    </div>
+                                    <div id="calendarGrid" class="calendar-grid"></div>
+                                </div>
                             </div>
                             <div>
                                 <div class="field">
@@ -382,9 +448,13 @@
 
                     <div class="section">
                         <div class="section-title">Quick Suggestions</div>
-                        <button class="suggestion" type="button" data-activity="Weightlifting">Strength Training<small>Popular this week</small></button>
-                        <button class="suggestion" type="button" data-activity="Soccer">Soccer<small>High demand</small></button>
-                        <button class="suggestion" type="button" data-activity="Swimming">Lap Swimming<small>Low occupancy</small></button>
+                        <div class="tag-wrap">
+                            <button class="quick-tag" type="button" data-activity="Weightlifting" data-location="Lyon Center" data-start="18:00" data-end="19:30" data-capacity="10">Strength Training</button>
+                            <button class="quick-tag" type="button" data-activity="Soccer" data-location="PED South Gym" data-start="17:30" data-end="19:00" data-capacity="14">Soccer</button>
+                            <button class="quick-tag" type="button" data-activity="Swimming" data-location="Uytengsu Aquatics Center" data-start="12:00" data-end="13:00" data-capacity="8">Lap Swimming</button>
+                            <button class="quick-tag" type="button" data-activity="Yoga" data-location="USC Village Fitness Center" data-start="07:30" data-end="08:30" data-capacity="12">Morning Yoga</button>
+                            <button class="quick-tag" type="button" data-activity="Pilates" data-location="HSC Fitness Center" data-start="16:00" data-end="17:00" data-capacity="10">Pilates Core</button>
+                        </div>
                     </div>
 
                     <div class="section">

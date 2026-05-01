@@ -23,6 +23,12 @@ const dateInput = document.getElementById("date");
 const startTimeInput = document.getElementById("startTime");
 const endTimeInput = document.getElementById("endTime");
 const capacityInput = document.getElementById("maxParticipants");
+const calendarTitle = document.getElementById("calendarTitle");
+const calendarGrid = document.getElementById("calendarGrid");
+const calendarPrev = document.getElementById("calendarPrev");
+const calendarNext = document.getElementById("calendarNext");
+let calendarMonth = new Date();
+calendarMonth.setDate(1);
 
 function populateSelect(select, options) {
     select.innerHTML = "";
@@ -54,6 +60,59 @@ function updatePreview() {
     document.getElementById("previewCapacity").textContent = `${capacity} Participants`;
 }
 
+function toDateInputValue(dateObj) {
+    const y = dateObj.getFullYear();
+    const m = String(dateObj.getMonth() + 1).padStart(2, "0");
+    const d = String(dateObj.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+}
+
+function renderCalendar() {
+    const monthLabel = calendarMonth.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+    calendarTitle.textContent = monthLabel;
+    calendarGrid.innerHTML = "";
+
+    ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].forEach((label) => {
+        const el = document.createElement("div");
+        el.className = "calendar-day-label";
+        el.textContent = label;
+        calendarGrid.appendChild(el);
+    });
+
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const selected = dateInput.value;
+
+    for (let i = 0; i < firstDay; i++) {
+        const spacer = document.createElement("button");
+        spacer.type = "button";
+        spacer.className = "calendar-day muted";
+        spacer.disabled = true;
+        spacer.textContent = "";
+        calendarGrid.appendChild(spacer);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "calendar-day";
+        btn.textContent = String(day);
+        const thisDate = new Date(year, month, day);
+        const value = toDateInputValue(thisDate);
+        if (selected === value) {
+            btn.classList.add("selected");
+        }
+        btn.addEventListener("click", () => {
+            dateInput.value = value;
+            updatePreview();
+            renderCalendar();
+        });
+        calendarGrid.appendChild(btn);
+    }
+}
+
 populateSelect(activitySelect, activityOptions);
 populateSelect(locationSelect, locationOptions);
 
@@ -69,13 +128,30 @@ document.getElementById("decreaseCapacity").addEventListener("click", () => {
     updatePreview();
 });
 
-document.querySelectorAll(".suggestion").forEach((btn) => {
+document.querySelectorAll(".quick-tag").forEach((btn) => {
     btn.addEventListener("click", () => {
-        const value = btn.getAttribute("data-activity");
-        if (value) {
-            activitySelect.value = value;
-            updatePreview();
+        document.querySelectorAll(".quick-tag").forEach((t) => t.classList.remove("active"));
+        btn.classList.add("active");
+
+        const activity = btn.getAttribute("data-activity");
+        const location = btn.getAttribute("data-location");
+        const start = btn.getAttribute("data-start");
+        const end = btn.getAttribute("data-end");
+        const capacity = btn.getAttribute("data-capacity");
+
+        if (activity) activitySelect.value = activity;
+        if (location) locationSelect.value = location;
+        if (start) startTimeInput.value = start;
+        if (end) endTimeInput.value = end;
+        if (capacity) capacityInput.value = capacity;
+
+        if (!dateInput.value) {
+            const nextDay = new Date();
+            nextDay.setDate(nextDay.getDate() + 1);
+            dateInput.value = toDateInputValue(nextDay);
         }
+        updatePreview();
+        renderCalendar();
     });
 });
 
@@ -85,6 +161,19 @@ document.querySelectorAll(".suggestion").forEach((btn) => {
 });
 
 updatePreview();
+renderCalendar();
+
+calendarPrev.addEventListener("click", () => {
+    calendarMonth.setMonth(calendarMonth.getMonth() - 1);
+    renderCalendar();
+});
+
+calendarNext.addEventListener("click", () => {
+    calendarMonth.setMonth(calendarMonth.getMonth() + 1);
+    renderCalendar();
+});
+
+dateInput.addEventListener("change", renderCalendar);
 
 document.getElementById("createEventForm").addEventListener("submit", async function(e) {
     e.preventDefault();
