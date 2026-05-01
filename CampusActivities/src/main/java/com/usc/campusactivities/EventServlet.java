@@ -111,7 +111,13 @@ public class EventServlet extends HttpServlet {
         if (!EventDAO.isApprovedLocation(location)) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             jsonResponse.addProperty("success", false);
-            jsonResponse.addProperty("message", "Location is not approved");
+            int facilityCount = EventDAO.countFacilities();
+            jsonResponse.addProperty(
+                "message",
+                "Location is not approved: '" + location + "'. (facilities rows: " + facilityCount + "). "
+                    + "Make sure you're running schema.sql against the same DB as DBUtil ("
+                    + DBUtil.class.getName() + ")."
+            );
             response.getWriter().write(jsonResponse.toString());
             return;
         }
