@@ -5,6 +5,7 @@ import javax.servlet.http.*;
 import java.io.*;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -118,11 +119,15 @@ public class EventServlet extends HttpServlet {
         // Host is added to participant list immediately.
         Event event = new Event(0, activityType, location, date, startTime, maxParticipants, 1, user.getId());
         event.setEndTime(endTime);
+        event.setPublic(request.getParameter("isPublic") != null);
 
-        if (EventDAO.insertEventWithHost(event)) {
+        List<Integer> inviteeIds = parseInviteeIds(request.getParameter("inviteeIds"));
+
+        if (EventDAO.insertEventWithHostAndInvites(event, inviteeIds)) {
             jsonResponse.addProperty("success", true);
             jsonResponse.addProperty("message", "Event created successfully");
             jsonResponse.add("event", new com.google.gson.Gson().toJsonTree(event));
+            jsonResponse.addProperty("invitesCreated", inviteeIds.size());
         } else {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             jsonResponse.addProperty("success", false);
@@ -310,5 +315,21 @@ public class EventServlet extends HttpServlet {
 
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
+    }
+
+    private List<Integer> parseInviteeIds(String raw) {
+        List<Integer> ids = new ArrayList<>();
+        if (raw == null || raw.trim().isEmpty()) {
+            return ids;
+        }
+        for (String part : raw.split(",")) {
+            String s = part.trim();
+            if (s.isEmpty()) continue;
+            try {
+                ids.add(Integer.parseInt(s));
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return ids;
     }
 }

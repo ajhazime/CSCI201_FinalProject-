@@ -66,6 +66,15 @@
     <servlet-name>MatchServlet</servlet-name>
     <url-pattern>/api/matches</url-pattern>
   </servlet-mapping>
+
+  <servlet>
+    <servlet-name>UserServlet</servlet-name>
+    <servlet-class>com.usc.campusactivities.UserServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>UserServlet</servlet-name>
+    <url-pattern>/api/users</url-pattern>
+  </servlet-mapping>
   
   <servlet>
     <servlet-name>LocationRatingServlet</servlet-name>

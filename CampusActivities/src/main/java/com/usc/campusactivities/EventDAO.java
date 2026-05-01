@@ -47,7 +47,7 @@ public class EventDAO {
 
     public static List<Event> getAllEvents() {
         List<Event> events = new ArrayList<>();
-        String sql = "SELECT * FROM events";
+        String sql = "SELECT * FROM events WHERE is_public = true";
         try (Connection conn = DBUtil.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -56,6 +56,7 @@ public class EventDAO {
                                      rs.getString("date"), rs.getString("time"), rs.getInt("max_participants"),
                                      rs.getInt("current_participants"), rs.getInt("creator_id")));
                 events.get(events.size() - 1).setEndTime(rs.getString("end_time"));
+                events.get(events.size() - 1).setPublic(rs.getBoolean("is_public"));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -80,8 +81,13 @@ public class EventDAO {
     }
 
     public static boolean insertEventWithHost(Event event) {
-        String eventSql = "INSERT INTO events (activity_type, location, date, time, end_time, max_participants, current_participants, creator_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        return insertEventWithHostAndInvites(event, null);
+    }
+
+    public static boolean insertEventWithHostAndInvites(Event event, List<Integer> inviteeIds) {
+        String eventSql = "INSERT INTO events (activity_type, location, date, time, end_time, max_participants, current_participants, is_public, creator_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         String participantSql = "INSERT INTO event_participants (event_id, user_id, role) VALUES (?, ?, ?)";
+        String inviteSql = "INSERT INTO event_invites (event_id, inviter_id, invitee_id, status) VALUES (?, ?, ?, 'PENDING')";
         try (Connection conn = DBUtil.getConnection()) {
             conn.setAutoCommit(false);
             try (PreparedStatement eventStmt = conn.prepareStatement(eventSql, Statement.RETURN_GENERATED_KEYS)) {
@@ -92,7 +98,8 @@ public class EventDAO {
                 eventStmt.setString(5, event.getEndTime());
                 eventStmt.setInt(6, event.getMaxParticipants());
                 eventStmt.setInt(7, event.getCurrentParticipants());
-                eventStmt.setInt(8, event.getCreatorId());
+                eventStmt.setBoolean(8, event.isPublic());
+                eventStmt.setInt(9, event.getCreatorId());
                 if (eventStmt.executeUpdate() == 0) {
                     conn.rollback();
                     return false;
@@ -114,6 +121,20 @@ public class EventDAO {
                     if (participantStmt.executeUpdate() == 0) {
                         conn.rollback();
                         return false;
+                    }
+                }
+
+                if (inviteeIds != null && !inviteeIds.isEmpty()) {
+                    try (PreparedStatement inviteStmt = conn.prepareStatement(inviteSql)) {
+                        for (Integer inviteeId : inviteeIds) {
+                            if (inviteeId == null) continue;
+                            if (inviteeId == event.getCreatorId()) continue;
+                            inviteStmt.setInt(1, eventId);
+                            inviteStmt.setInt(2, event.getCreatorId());
+                            inviteStmt.setInt(3, inviteeId);
+                            inviteStmt.addBatch();
+                        }
+                        inviteStmt.executeBatch();
                     }
                 }
 
@@ -151,6 +172,7 @@ public class EventDAO {
                         rs.getInt("creator_id")
                     );
                     event.setEndTime(rs.getString("end_time"));
+                    event.setPublic(rs.getBoolean("is_public"));
                     return event;
                 }
             }

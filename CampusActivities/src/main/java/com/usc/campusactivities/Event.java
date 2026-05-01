@@ -16,6 +16,7 @@ public class Event {
     private int maxParticipants;
     private int currentParticipants;
     private int creatorId;
+    private boolean isPublic = true;
 
     public Event() {}
 
@@ -57,6 +58,9 @@ public class Event {
 
     public int getCreatorId() { return creatorId; }
     public void setCreatorId(int creatorId) { this.creatorId = creatorId; }
+
+    public boolean isPublic() { return isPublic; }
+    public void setPublic(boolean isPublic) { this.isPublic = isPublic; }
 
     public boolean isFull() {
         return currentParticipants >= maxParticipants;

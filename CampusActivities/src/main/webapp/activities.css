@@ -249,6 +249,154 @@ a {
     color: var(--muted);
 }
 
+/* CALENDAR */
+
+.calendar-card {
+    padding: 18px 24px 20px 24px;
+    border-bottom: 1px solid var(--border);
+    background: #fbfaf9;
+}
+
+.calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.calendar-left,
+.calendar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.cal-nav {
+    border: 1px solid #ddd6d0;
+    background: white;
+    border-radius: 10px;
+    width: 34px;
+    height: 34px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.cal-action {
+    border-radius: 12px;
+    padding: 10px 12px;
+    border: 1px solid #ddd6d0;
+    background: white;
+    font-weight: bold;
+    cursor: pointer;
+    color: #555;
+    font-size: 13px;
+}
+
+.cal-action:hover {
+    background: #f8f6f4;
+}
+
+.cal-action.primary {
+    background: rgba(157, 34, 53, 0.10);
+    border-color: rgba(157, 34, 53, 0.35);
+    color: var(--usc-cardinal);
+}
+
+.cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+}
+
+.cal-dow {
+    text-align: center;
+    color: #8a8a8a;
+    font-size: 11px;
+    padding: 2px 0;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+.cal-day {
+    background: white;
+    border: 1px solid #eee8e2;
+    border-radius: 14px;
+    padding: 10px 10px 12px 10px;
+    min-height: 92px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.cal-day:hover {
+    border-color: #cfc7c1;
+}
+
+.cal-day.muted {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.cal-day.selected {
+    border-color: rgba(157, 34, 53, 0.45);
+    box-shadow: 0 0 0 3px rgba(157, 34, 53, 0.10);
+}
+
+.cal-day-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.cal-num {
+    font-weight: 800;
+    color: #555;
+}
+
+.cal-badge {
+    font-size: 11px;
+    font-weight: 800;
+    background: rgba(255, 204, 0, 0.22);
+    color: #6a5200;
+    border: 1px solid rgba(255, 204, 0, 0.45);
+    border-radius: 999px;
+    padding: 3px 7px;
+    white-space: nowrap;
+}
+
+.cal-events {
+    display: grid;
+    gap: 6px;
+}
+
+.cal-pill {
+    border-radius: 999px;
+    padding: 6px 9px;
+    font-size: 12px;
+    font-weight: 800;
+    background: rgba(157, 34, 53, 0.08);
+    color: var(--usc-cardinal);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cal-more {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: bold;
+}
+
+.cal-hint {
+    margin-top: 12px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
 .table-wrapper {
     width: 100%;
     overflow-x: auto;

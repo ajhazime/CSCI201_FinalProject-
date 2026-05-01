@@ -26,6 +26,7 @@ USE campusactivities;
     end_time TIME NOT NULL,                                                                                             
     max_participants INT NOT NULL,
     current_participants INT DEFAULT 0,
+    is_public BOOLEAN DEFAULT true,
     creator_id INT,
     INDEX idx_events_date_time (date, time, end_time),
     FOREIGN KEY (creator_id) REFERENCES users(id)                                                                       
@@ -48,6 +49,20 @@ CREATE TABLE event_participants (
     INDEX idx_event_participants_user_event (user_id, event_id),
     FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE event_invites (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    event_id INT NOT NULL,
+    inviter_id INT NOT NULL,
+    invitee_id INT NOT NULL,
+    status VARCHAR(20) DEFAULT 'PENDING',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_event_invitee (event_id, invitee_id),
+    INDEX idx_event_invites_invitee (invitee_id, status),
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
+    FOREIGN KEY (inviter_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (invitee_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE user_availability (                                                                                        
