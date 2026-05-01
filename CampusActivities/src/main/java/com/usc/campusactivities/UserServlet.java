@@ -23,6 +23,23 @@ public class UserServlet extends HttpServlet {
             return;
         }
 
+        String idParam = request.getParameter("id");
+        if (idParam != null) {
+            try {
+                User target = UserDAO.getUserById(Integer.parseInt(idParam));
+                if (target == null) {
+                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    response.getWriter().write("{}");
+                } else {
+                    response.getWriter().write(new Gson().toJson(target));
+                }
+            } catch (NumberFormatException e) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                response.getWriter().write("{}");
+            }
+            return;
+        }
+
         String query = request.getParameter("query");
         int limit = 20;
         try {
