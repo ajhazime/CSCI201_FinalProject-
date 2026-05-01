@@ -40,7 +40,8 @@ public class LogoutServlet extends HttpServlet {
             return;
         }
 
-        String login = response.encodeRedirectURL(request.getContextPath() + "/login.html?signedOut=1");
-        response.sendRedirect(login);
+        // Land on the public welcome page (user can click Sign In again if they want).
+        String home = response.encodeRedirectURL(request.getContextPath() + "/index.html?signedOut=1");
+        response.sendRedirect(home);
     }
 }
