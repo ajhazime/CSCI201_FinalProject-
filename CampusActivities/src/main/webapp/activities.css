@@ -470,6 +470,89 @@ a {
     color: var(--usc-cardinal);
 }
 
+/* INVITES CARD */
+
+.invites-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.04);
+    margin-bottom: 24px;
+}
+
+.invite-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+}
+
+.invite-row:last-child {
+    border-bottom: none;
+}
+
+.invite-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.invite-from {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text);
+}
+
+.invite-detail {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.invite-btns {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.invite-btn {
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: bold;
+    padding: 8px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    border: 1px solid #ddd6d0;
+    background: white;
+    color: #555;
+    transition: background 0.15s ease;
+}
+
+.invite-btn:hover {
+    background: #f8f6f4;
+}
+
+.invite-btn.primary {
+    background: var(--usc-cardinal);
+    border-color: var(--usc-cardinal);
+    color: white;
+}
+
+.invite-btn.primary:hover {
+    background: var(--usc-cardinal-dark);
+}
+
+.invite-empty {
+    padding: 28px 24px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+}
+
 /* RESPONSIVE */
 
 @media (max-width: 1000px) {
