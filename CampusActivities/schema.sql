@@ -1,6 +1,6 @@
-DROP DATABASE IF EXISTS campusactivities;                                                                               
-CREATE DATABASE campusactivities;
-USE campusactivities;                                                                                                   
+DROP DATABASE IF EXISTS CampusActivities;                                                                               
+CREATE DATABASE campusActivities;
+USE CampusActivities;                                                                                                   
                   
   CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
