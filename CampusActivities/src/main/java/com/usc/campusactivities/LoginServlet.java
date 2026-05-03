@@ -1,7 +1,7 @@
 package com.usc.campusactivities;
 
-import javax.servlet.*;
-import javax.servlet.http.*;
+import jakarta.servlet.*;
+import jakarta.servlet.http.*;
 import java.io.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
