@@ -458,6 +458,272 @@ a {
     white-space: nowrap;
 }
 
+.status-pill {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 7px 11px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+.status-upcoming {
+    background: #e3f2fd;
+    color: #1565c0;
+    border: 1px solid rgba(21, 101, 192, 0.2);
+}
+
+.status-in-progress {
+    background: #fff3e0;
+    color: #ef6c00;
+    border: 1px solid rgba(239, 108, 0, 0.22);
+}
+
+.status-completed {
+    background: #eceff1;
+    color: #546e7a;
+    border: 1px solid rgba(84, 110, 122, 0.2);
+}
+
+.status-present-confirmed {
+    background: var(--green-soft);
+    color: #1b5e20;
+    border: 1px solid rgba(47, 143, 70, 0.35);
+}
+
+.status-not-present {
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid rgba(198, 40, 40, 0.25);
+}
+
+.action-not-present {
+    font-size: 13px;
+    font-weight: 800;
+    color: #c62828;
+}
+
+.status-unknown {
+    background: #f5f5f5;
+    color: #9e9e9e;
+    border: 1px solid #e0e0e0;
+}
+
+.action-cell {
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.action-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.btn-joined-label {
+    display: inline-block;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--green);
+}
+
+.btn-join {
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: bold;
+    padding: 8px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    border: 1px solid var(--usc-cardinal);
+    background: var(--usc-cardinal);
+    color: white;
+    transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-join:hover:not(:disabled) {
+    background: var(--usc-cardinal-dark);
+}
+
+.btn-join:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.btn-link-leave {
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--muted);
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.btn-link-leave:hover:not(:disabled) {
+    color: var(--usc-cardinal);
+}
+
+.btn-link-leave:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.action-host {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--usc-cardinal);
+}
+
+.action-muted {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.action-live {
+    font-size: 13px;
+    font-weight: 800;
+    color: #ef6c00;
+}
+
+.action-host-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.btn-attendance {
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 7px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    border: 1px solid rgba(157, 34, 53, 0.45);
+    background: white;
+    color: var(--usc-cardinal);
+    transition: background 0.15s ease;
+}
+
+.btn-attendance:hover {
+    background: rgba(157, 34, 53, 0.06);
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 20px;
+}
+
+.modal-overlay.is-open {
+    display: flex;
+}
+
+.modal-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    max-width: 440px;
+    width: 100%;
+    padding: 22px 24px 18px 24px;
+    border: 1px solid var(--border);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+}
+
+.modal-card h3 {
+    margin: 0 0 8px 0;
+    font-size: 19px;
+}
+
+.modal-sub {
+    margin: 0 0 16px 0;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.45;
+}
+
+.attendance-list {
+    max-height: 280px;
+    overflow-y: auto;
+    margin-bottom: 12px;
+}
+
+.attendance-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.attendance-row:last-child {
+    border-bottom: none;
+}
+
+.attendance-name {
+    font-weight: 700;
+    flex: 1;
+}
+
+.attendance-hint {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.modal-loading,
+.modal-empty {
+    font-size: 14px;
+    color: var(--muted);
+    padding: 12px 0;
+}
+
+.modal-error {
+    color: var(--usc-cardinal);
+    font-size: 13px;
+    min-height: 1.2em;
+    margin: 0 0 10px 0;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.modal-btn {
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 10px 18px;
+    border-radius: 12px;
+    border: 1px solid #ddd6d0;
+    background: white;
+    cursor: pointer;
+}
+
+.modal-btn.primary {
+    background: var(--usc-cardinal);
+    border-color: var(--usc-cardinal);
+    color: white;
+}
+
+.modal-btn.primary:hover {
+    background: var(--usc-cardinal-dark);
+}
+
 .loading-cell,
 .empty-cell,
 .error-cell {

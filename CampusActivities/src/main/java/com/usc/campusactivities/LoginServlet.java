@@ -13,10 +13,10 @@ public class LoginServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        
+
         Gson gson = new Gson();
         JsonObject jsonResponse = new JsonObject();
-        
+
         try {
             String username = request.getParameter("username");
             String password = request.getParameter("password");
@@ -29,31 +29,42 @@ public class LoginServlet extends HttpServlet {
                 return;
             }
 
+            String userKey = username.trim();
             User user = null;
-            if (GUEST_USERNAME.equals(username) && GUEST_PASSWORD.equals(password)) {
-                // Internal guest hook for demos when DB-backed registration is unavailable.
-                user = new User(0, GUEST_USERNAME, "", "guest@usc.edu", "fitness,wellness", "beginner", 0);
+
+            if (GUEST_USERNAME.equalsIgnoreCase(userKey) && GUEST_PASSWORD.equals(password)) {
+                user = UserDAO.getUserByUsername(GUEST_USERNAME);
+                if (user == null) {
+                    User seed = new User(0, GUEST_USERNAME, GUEST_PASSWORD, "guest@usc.edu", "fitness,wellness", "beginner", 0);
+                    UserDAO.insertUser(seed);
+                    user = UserDAO.getUserByUsername(GUEST_USERNAME);
+                }
+                if (user != null && user.getPassword().equals(password)) {
+                    HttpSession session = request.getSession();
+                    session.setAttribute("user", user);
+                    jsonResponse.addProperty("success", true);
+                    jsonResponse.addProperty("message", "Guest login successful");
+                    jsonResponse.add("user", gson.toJsonTree(user));
+                } else {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    jsonResponse.addProperty("success", false);
+                    jsonResponse.addProperty("message", "Guest login is not available (database seed missing).");
+                }
             } else {
-                user = UserDAO.getUserByUsername(username);
+                user = UserDAO.getUserByUsername(userKey);
+                if (user != null && user.getPassword().equals(password)) {
+                    HttpSession session = request.getSession();
+                    session.setAttribute("user", user);
+                    jsonResponse.addProperty("success", true);
+                    jsonResponse.addProperty("message", "Login successful");
+                    jsonResponse.add("user", gson.toJsonTree(user));
+                } else {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    jsonResponse.addProperty("success", false);
+                    jsonResponse.addProperty("message", "Invalid credentials");
+                }
             }
-            if (user != null && user.getPassword().equals(password)) {
-                HttpSession session = request.getSession();
-                session.setAttribute("user", user);
-                jsonResponse.addProperty("success", true);
-                jsonResponse.addProperty("message", "Login successful");
-                jsonResponse.add("user", gson.toJsonTree(user));
-            } else if (GUEST_USERNAME.equals(username) && GUEST_PASSWORD.equals(password)) {
-                HttpSession session = request.getSession();
-                session.setAttribute("user", user);
-                jsonResponse.addProperty("success", true);
-                jsonResponse.addProperty("message", "Guest login successful");
-                jsonResponse.add("user", gson.toJsonTree(user));
-            } else {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                jsonResponse.addProperty("success", false);
-                jsonResponse.addProperty("message", "Invalid credentials");
-            }
-            
+
             response.getWriter().write(jsonResponse.toString());
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

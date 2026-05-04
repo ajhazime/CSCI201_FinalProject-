@@ -411,7 +411,9 @@ document.getElementById("createEventForm").addEventListener("submit", async func
     if (!params.get("time") && params.get("startTime")) {
         params.set("time", params.get("startTime"));
     }
-    const res = await fetch("createEvent", { method: "POST", body: params });
+    const createUrl =
+        typeof campusFitUrl === "function" ? campusFitUrl("createEvent") : "createEvent";
+    const res = await fetch(createUrl, { method: "POST", body: params, credentials: "same-origin" });
     if (res.status === 401) {
         window.location.href = "login.html";
         return;
