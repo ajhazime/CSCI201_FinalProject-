@@ -62,4 +62,14 @@ public class User {
     public double getAvgRating() { return avgRating; }
     public void setAvgRating(double avgRating) { this.avgRating = avgRating; }
 
-    public String getPreferredLocations() { return pre
+    public String getPreferredLocations() { return preferredLocations; }
+    public void setPreferredLocations(String preferredLocations) { this.preferredLocations = preferredLocations; }
+
+    public String getEventRestrictionUntil() {
+        return eventRestrictionUntil;
+    }
+
+    public void setEventRestrictionUntil(String eventRestrictionUntil) {
+        this.eventRestrictionUntil = eventRestrictionUntil;
+    }
+}

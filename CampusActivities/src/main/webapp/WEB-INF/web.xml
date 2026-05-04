@@ -100,4 +100,18 @@
     <servlet-class>com.usc.campusactivities.UserServlet</servlet-class>
   </servlet>
   <servlet-mapping>
-    <servlet-name>
+    <servlet-name>UserServlet</servlet-name>
+    <url-pattern>/api/users</url-pattern>
+  </servlet-mapping>
+  
+  <servlet>
+    <servlet-name>LocationRatingServlet</servlet-name>
+    <servlet-class>com.usc.campusactivities.LocationRatingServlet</servlet-class>
+  </servlet>
+
+<servlet-mapping>
+    <servlet-name>LocationRatingServlet</servlet-name>
+    <url-pattern>/api/locations</url-pattern>
+</servlet-mapping>
+
+</web-app>
