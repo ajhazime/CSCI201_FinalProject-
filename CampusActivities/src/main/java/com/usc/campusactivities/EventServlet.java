@@ -19,12 +19,47 @@ public class EventServlet extends HttpServlet {
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
+
+        if ("/myEvents".equals(request.getServletPath())) {
+            HttpSession session = request.getSession(false);
+            User user = session == null ? null : (User) session.getAttribute("user");
+            if (user == null) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("[]");
+                return;
+            }
+            int excludeInviteeId = -1;
+            try { excludeInviteeId = Integer.parseInt(request.getParameter("inviteeId")); } catch (Exception ignored) {}
+            response.getWriter().write(new Gson().toJson(EventDAO.getEventsByCreator(user.getId(), excludeInviteeId)));
+            return;
+        }
+
+        if ("/myInvites".equals(request.getServletPath())) {
+            HttpSession session = request.getSession(false);
+            User user = session == null ? null : (User) session.getAttribute("user");
+            if (user == null) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("[]");
+                return;
+            }
+            response.getWriter().write(new Gson().toJson(EventDAO.getPendingInvites(user.getId())));
+            return;
+        }
+
         List<Event> events = EventDAO.getAllEvents();
         response.getWriter().write(new Gson().toJson(events));
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String servletPath = request.getServletPath();
+        if ("/sendInvite".equals(servletPath)) {
+            sendInvite(request, response);
+            return;
+        }
+        if ("/respondInvite".equals(servletPath)) {
+            respondInvite(request, response);
+            return;
+        }
         if ("/joinEvent".equals(servletPath)) {
             joinEvent(request, response);
             return;
@@ -111,7 +146,13 @@ public class EventServlet extends HttpServlet {
         if (!EventDAO.isApprovedLocation(location)) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             jsonResponse.addProperty("success", false);
-            jsonResponse.addProperty("message", "Location is not approved");
+            int facilityCount = EventDAO.countFacilities();
+            jsonResponse.addProperty(
+                "message",
+                "Location is not approved: '" + location + "'. (facilities rows: " + facilityCount + "). "
+                    + "Make sure you're running schema.sql against the same DB as DBUtil ("
+                    + DBUtil.class.getName() + ")."
+            );
             response.getWriter().write(jsonResponse.toString());
             return;
         }
@@ -310,6 +351,110 @@ public class EventServlet extends HttpServlet {
                 break;
         }
 
+        response.getWriter().write(jsonResponse.toString());
+    }
+
+    private void sendInvite(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        JsonObject jsonResponse = new JsonObject();
+        HttpSession session = request.getSession(false);
+        User user = session == null ? null : (User) session.getAttribute("user");
+        if (user == null) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "User not authenticated");
+            response.getWriter().write(jsonResponse.toString());
+            return;
+        }
+
+        int eventId, inviteeId;
+        try {
+            eventId   = Integer.parseInt(request.getParameter("eventId"));
+            inviteeId = Integer.parseInt(request.getParameter("inviteeId"));
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "eventId and inviteeId must be valid integers");
+            response.getWriter().write(jsonResponse.toString());
+            return;
+        }
+
+        EventDAO.SendInviteStatus status = EventDAO.sendInvite(eventId, user.getId(), inviteeId);
+        switch (status) {
+            case SUCCESS:
+                jsonResponse.addProperty("success", true);
+                jsonResponse.addProperty("message", "Invite sent successfully");
+                break;
+            case ALREADY_INVITED:
+                response.setStatus(HttpServletResponse.SC_CONFLICT);
+                jsonResponse.addProperty("success", false);
+                jsonResponse.addProperty("message", "User has already been invited to this event");
+                break;
+            case EVENT_NOT_FOUND:
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                jsonResponse.addProperty("success", false);
+                jsonResponse.addProperty("message", "Event not found");
+                break;
+            default:
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                jsonResponse.addProperty("success", false);
+                jsonResponse.addProperty("message", "Failed to send invite");
+                break;
+        }
+        response.getWriter().write(jsonResponse.toString());
+    }
+
+    private void respondInvite(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        JsonObject jsonResponse = new JsonObject();
+        HttpSession session = request.getSession(false);
+        User user = session == null ? null : (User) session.getAttribute("user");
+        if (user == null) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "User not authenticated");
+            response.getWriter().write(jsonResponse.toString());
+            return;
+        }
+
+        int inviteId;
+        boolean accept;
+        try {
+            inviteId = Integer.parseInt(request.getParameter("inviteId"));
+            accept   = Boolean.parseBoolean(request.getParameter("accept"));
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "inviteId must be a valid integer");
+            response.getWriter().write(jsonResponse.toString());
+            return;
+        }
+
+        EventDAO.RespondInviteStatus status = EventDAO.respondToInvite(inviteId, user.getId(), accept);
+        if (status == EventDAO.RespondInviteStatus.SUCCESS) {
+            jsonResponse.addProperty("success", true);
+            jsonResponse.addProperty("message", accept ? "Invite accepted" : "Invite declined");
+        } else if (status == EventDAO.RespondInviteStatus.INVITE_NOT_FOUND) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "Invite not found");
+        } else if (status == EventDAO.RespondInviteStatus.EVENT_FULL) {
+            response.setStatus(HttpServletResponse.SC_CONFLICT);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "Event is full");
+        } else if (status == EventDAO.RespondInviteStatus.TIME_CONFLICT) {
+            response.setStatus(HttpServletResponse.SC_CONFLICT);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "You have a scheduling conflict with this event");
+        } else {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "Failed to respond to invite");
+        }
         response.getWriter().write(jsonResponse.toString());
     }
 

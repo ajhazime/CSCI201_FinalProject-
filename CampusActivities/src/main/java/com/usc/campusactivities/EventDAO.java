@@ -80,6 +80,20 @@ public class EventDAO {
         return false;
     }
 
+    public static int countFacilities() {
+        String sql = "SELECT COUNT(*) FROM facilities";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
     public static boolean insertEventWithHost(Event event) {
         return insertEventWithHostAndInvites(event, null);
     }
@@ -423,6 +437,154 @@ public class EventDAO {
             return now.isBefore(eventStartDateTime) && !now.isBefore(eventStartDateTime.minusHours(windowHours));
         } catch (Exception e) {
             return false;
+        }
+    }
+
+    public static List<Event> getEventsByCreator(int userId) {
+        return getEventsByCreator(userId, -1);
+    }
+
+    public static List<Event> getEventsByCreator(int userId, int excludeInviteeId) {
+        List<Event> events = new ArrayList<>();
+        String sql = excludeInviteeId > 0
+            ? "SELECT id, activity_type, location, date, time, end_time, max_participants, current_participants, creator_id "
+            + "FROM events WHERE creator_id = ? "
+            + "AND id NOT IN (SELECT event_id FROM event_invites WHERE invitee_id = ?) "
+            + "ORDER BY date ASC, time ASC"
+            : "SELECT id, activity_type, location, date, time, end_time, max_participants, current_participants, creator_id "
+            + "FROM events WHERE creator_id = ? ORDER BY date ASC, time ASC";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            if (excludeInviteeId > 0) stmt.setInt(2, excludeInviteeId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Event e = new Event(rs.getInt("id"), rs.getString("activity_type"), rs.getString("location"),
+                            rs.getString("date"), rs.getString("time"), rs.getInt("max_participants"),
+                            rs.getInt("current_participants"), rs.getInt("creator_id"));
+                    e.setEndTime(rs.getString("end_time"));
+                    events.add(e);
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return events;
+    }
+
+    public static class PendingInvite {
+        public int inviteId;
+        public int eventId;
+        public String inviterName;
+        public String activityType;
+        public String location;
+        public String date;
+    }
+
+    public static List<PendingInvite> getPendingInvites(int userId) {
+        List<PendingInvite> invites = new ArrayList<>();
+        String sql = "SELECT ei.id AS invite_id, ei.event_id, u.username AS inviter_name, " +
+                     "e.activity_type, e.location, e.date " +
+                     "FROM event_invites ei " +
+                     "JOIN events e ON ei.event_id = e.id " +
+                     "JOIN users u ON ei.inviter_id = u.id " +
+                     "WHERE ei.invitee_id = ? AND ei.status = 'PENDING' " +
+                     "ORDER BY ei.created_at DESC";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    PendingInvite inv = new PendingInvite();
+                    inv.inviteId     = rs.getInt("invite_id");
+                    inv.eventId      = rs.getInt("event_id");
+                    inv.inviterName  = rs.getString("inviter_name");
+                    inv.activityType = rs.getString("activity_type");
+                    inv.location     = rs.getString("location");
+                    inv.date         = rs.getString("date");
+                    invites.add(inv);
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return invites;
+    }
+
+    public enum RespondInviteStatus { SUCCESS, INVITE_NOT_FOUND, EVENT_FULL, TIME_CONFLICT, DB_ERROR }
+
+    public static RespondInviteStatus respondToInvite(int inviteId, int userId, boolean accept) {
+        String fetchSql  = "SELECT event_id FROM event_invites WHERE id = ? AND invitee_id = ? AND status = 'PENDING'";
+        String updateSql = "UPDATE event_invites SET status = ? WHERE id = ?";
+        try (Connection conn = DBUtil.getConnection()) {
+            int eventId;
+            try (PreparedStatement ps = conn.prepareStatement(fetchSql)) {
+                ps.setInt(1, inviteId);
+                ps.setInt(2, userId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (!rs.next()) return RespondInviteStatus.INVITE_NOT_FOUND;
+                    eventId = rs.getInt("event_id");
+                }
+            }
+            if (!accept) {
+                try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
+                    ps.setString(1, "DECLINED");
+                    ps.setInt(2, inviteId);
+                    ps.executeUpdate();
+                }
+                return RespondInviteStatus.SUCCESS;
+            }
+            JoinEventStatus joinStatus = joinEvent(userId, eventId);
+            if (joinStatus == JoinEventStatus.SUCCESS || joinStatus == JoinEventStatus.ALREADY_JOINED) {
+                try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
+                    ps.setString(1, "ACCEPTED");
+                    ps.setInt(2, inviteId);
+                    ps.executeUpdate();
+                }
+                return RespondInviteStatus.SUCCESS;
+            } else if (joinStatus == JoinEventStatus.EVENT_FULL) {
+                return RespondInviteStatus.EVENT_FULL;
+            } else if (joinStatus == JoinEventStatus.TIME_CONFLICT) {
+                return RespondInviteStatus.TIME_CONFLICT;
+            } else {
+                return RespondInviteStatus.DB_ERROR;
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return RespondInviteStatus.DB_ERROR;
+        }
+    }
+
+    public enum SendInviteStatus { SUCCESS, ALREADY_INVITED, EVENT_NOT_FOUND, DB_ERROR }
+
+    public static SendInviteStatus sendInvite(int eventId, int inviterId, int inviteeId) {
+        String checkEventSql = "SELECT 1 FROM events WHERE id = ?";
+        String checkDupSql   = "SELECT 1 FROM event_invites WHERE event_id = ? AND invitee_id = ?";
+        String insertSql     = "INSERT INTO event_invites (event_id, inviter_id, invitee_id, status) VALUES (?, ?, ?, 'PENDING')";
+        try (Connection conn = DBUtil.getConnection()) {
+            try (PreparedStatement ps = conn.prepareStatement(checkEventSql)) {
+                ps.setInt(1, eventId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (!rs.next()) return SendInviteStatus.EVENT_NOT_FOUND;
+                }
+            }
+            try (PreparedStatement ps = conn.prepareStatement(checkDupSql)) {
+                ps.setInt(1, eventId);
+                ps.setInt(2, inviteeId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) return SendInviteStatus.ALREADY_INVITED;
+                }
+            }
+            try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
+                ps.setInt(1, eventId);
+                ps.setInt(2, inviterId);
+                ps.setInt(3, inviteeId);
+                if (ps.executeUpdate() == 0) return SendInviteStatus.DB_ERROR;
+            }
+            return SendInviteStatus.SUCCESS;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return SendInviteStatus.DB_ERROR;
         }
     }
 

@@ -30,20 +30,6 @@ if (!user) {
     }
 }
 
-document.getElementById('logoutLink').addEventListener('click', function(e) {
-    e.preventDefault();
-
-    fetch('/CampusActivities/logout')
-        .then(() => {
-            sessionStorage.removeItem('user');
-            window.location.href = 'login.html';
-        })
-        .catch(() => {
-            sessionStorage.removeItem('user');
-            window.location.href = 'login.html';
-        });
-});
-
 function getInitials(name) {
     const parts = String(name).trim().split(/\s+/);
 

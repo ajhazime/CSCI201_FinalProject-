@@ -62,6 +62,7 @@ const calendarPrev = document.getElementById("calendarPrev");
 const calendarNext = document.getElementById("calendarNext");
 let calendarMonth = new Date();
 calendarMonth.setDate(1);
+<<<<<<< Updated upstream
 
 const inviteSearch = document.getElementById("inviteSearch");
 const inviteResults = document.getElementById("inviteResults");
@@ -164,6 +165,8 @@ function escapeHtml(value) {
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
 }
+=======
+>>>>>>> Stashed changes
 
 function populateSelect(select, options) {
     select.innerHTML = "";
@@ -330,7 +333,10 @@ document.querySelectorAll(".quick-tag").forEach((btn) => {
 
 updatePreview();
 renderCalendar();
+<<<<<<< Updated upstream
 wireInviteSearch();
+=======
+>>>>>>> Stashed changes
 
 calendarPrev.addEventListener("click", () => {
     calendarMonth.setMonth(calendarMonth.getMonth() - 1);

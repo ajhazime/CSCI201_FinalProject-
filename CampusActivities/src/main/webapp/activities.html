@@ -35,7 +35,7 @@
                 <a href="profile.html" class="sidebar-link">Profile</a>
             </div>
 
-            <a href="#" id="logoutLink" class="logout-button">Sign out</a>
+            <a href="logout" id="logoutLink" class="logout-button">Sign out</a>
         </aside>
 
         <main class="activities-content">
@@ -67,6 +67,16 @@
                         <div class="summary-label">Locations</div>
                         <div class="summary-value" id="locationCount">0</div>
                     </div>
+                </div>
+
+                <div class="invites-card">
+                    <div class="events-card-header">
+                        <div>
+                            <h2>Pending Invites</h2>
+                            <p>Events you've been invited to join.</p>
+                        </div>
+                    </div>
+                    <div id="inviteRows"></div>
                 </div>
 
                 <div class="events-card">
@@ -116,6 +126,8 @@
         </main>
     </div>
 
+    <script src="app-context.js"></script>
+    <script src="logout.js"></script>
     <script src="activities.js"></script>
 </body>
 </html>
