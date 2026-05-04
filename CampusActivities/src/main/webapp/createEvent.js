@@ -420,10 +420,4 @@ document.getElementById("createEventForm").addEventListener("submit", async func
     }
     const data = await res.json();
     if (data.success) {
-        window.location.href = "activities.html";
-    } else {
-        if (errorEl) {
-            errorEl.textContent = data.message;
-        }
-    }
-});
+        window.loc
