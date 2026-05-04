@@ -9,12 +9,23 @@ import java.util.*;
 public class EventDAO {
     private static final int LEAVE_PENALTY_WINDOW_HOURS = 24; // X hours hook
 
+    private static final ThreadLocal<String> LAST_INSERT_EVENT_ERROR = new ThreadLocal<>();
+
+    /** Cleared after read; used to surface DB errors on event creation failure. */
+    public static String consumeLastInsertEventError() {
+        String msg = LAST_INSERT_EVENT_ERROR.get();
+        LAST_INSERT_EVENT_ERROR.remove();
+        return msg;
+    }
+
     public enum JoinEventStatus {
         SUCCESS,
         EVENT_NOT_FOUND,
         ALREADY_JOINED,
         TIME_CONFLICT,
         EVENT_FULL,
+        /** Active no-show penalty blocks joins */
+        EVENT_ACTION_BLOCKED,
         NOT_PARTICIPANT,
         EVENT_CANCELLED,
         DB_ERROR
@@ -45,23 +56,232 @@ public class EventDAO {
         }
     }
 
-    public static List<Event> getAllEvents() {
+    /**
+     * Public events. When {@code viewerUserId >= 0}, each event includes whether that user is in {@code event_participants}.
+     * Use {@code viewerUserId == -1} to skip membership (all {@code currentUserJoined} false).
+     */
+    public static List<Event> getAllEventsForViewer(int viewerUserId) {
         List<Event> events = new ArrayList<>();
-        String sql = "SELECT * FROM events WHERE is_public = true";
+        boolean withMembership = viewerUserId >= 0;
+        String sql = withMembership
+            ? "SELECT e.*, (ep.user_id IS NOT NULL) AS user_joined, ep.present AS participant_present FROM events e "
+                + "LEFT JOIN event_participants ep ON e.id = ep.event_id AND ep.user_id = ? "
+                + "WHERE e.is_public = true"
+            : "SELECT * FROM events WHERE is_public = true";
         try (Connection conn = DBUtil.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-            while (rs.next()) {
-                events.add(new Event(rs.getInt("id"), rs.getString("activity_type"), rs.getString("location"),
-                                     rs.getString("date"), rs.getString("time"), rs.getInt("max_participants"),
-                                     rs.getInt("current_participants"), rs.getInt("creator_id")));
-                events.get(events.size() - 1).setEndTime(rs.getString("end_time"));
-                events.get(events.size() - 1).setPublic(rs.getBoolean("is_public"));
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            if (withMembership) {
+                stmt.setInt(1, viewerUserId);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Event ev = new Event(rs.getInt("id"), rs.getString("activity_type"), rs.getString("location"),
+                        rs.getString("date"), rs.getString("time"), rs.getInt("max_participants"),
+                        rs.getInt("current_participants"), rs.getInt("creator_id"));
+                    ev.setEndTime(rs.getString("end_time"));
+                    ev.setPublic(rs.getBoolean("is_public"));
+                    if (withMembership) {
+                        ev.setCurrentUserJoined(rs.getBoolean("user_joined"));
+                        Object po = rs.getObject("participant_present");
+                        if (ev.isCurrentUserJoined()) {
+                            if (po == null) {
+                                ev.setParticipantPresent(null);
+                            } else {
+                                ev.setParticipantPresent(((Number) po).intValue() != 0);
+                            }
+                        } else {
+                            ev.setParticipantPresent(null);
+                        }
+                    } else {
+                        ev.setCurrentUserJoined(false);
+                        ev.setParticipantPresent(null);
+                    }
+                    events.add(ev);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return events;
+    }
+
+    public static List<Event> getAllEvents() {
+        return getAllEventsForViewer(-1);
+    }
+
+    /** Events the user is participating in that have not ended yet (includes hosting). */
+    public static List<Event> getUpcomingEventsForUser(int userId, int limit) {
+        if (limit <= 0 || limit > 25) {
+            limit = 8;
+        }
+        List<Event> out = new ArrayList<>();
+        String sql = "SELECT e.id, e.activity_type, e.location, e.date, e.time, e.end_time, e.max_participants, "
+            + "e.current_participants, e.is_public, e.creator_id "
+            + "FROM events e "
+            + "INNER JOIN event_participants ep ON e.id = ep.event_id AND ep.user_id = ? "
+            + "WHERE TIMESTAMP(e.date, e.end_time) > NOW() "
+            + "ORDER BY e.date ASC, e.time ASC LIMIT ?";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            stmt.setInt(2, limit);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Event ev = new Event(
+                        rs.getInt("id"),
+                        rs.getString("activity_type"),
+                        rs.getString("location"),
+                        rs.getString("date"),
+                        rs.getString("time"),
+                        rs.getInt("max_participants"),
+                        rs.getInt("current_participants"),
+                        rs.getInt("creator_id"));
+                    ev.setEndTime(rs.getString("end_time"));
+                    ev.setPublic(rs.getBoolean("is_public"));
+                    out.add(ev);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return out;
+    }
+
+    /**
+     * After scheduled end, participants who were not marked present receive a 12h event lockout.
+     * Idempotent per event via {@code attendance_finalized}.
+     */
+    public static void finalizeAttendanceForEndedEvents() {
+        List<Integer> eventIds = new ArrayList<>();
+        String findSql = "SELECT id FROM events WHERE attendance_finalized = 0 AND TIMESTAMP(date, end_time) < NOW()";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(findSql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                eventIds.add(rs.getInt(1));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        for (int eventId : eventIds) {
+            try (Connection conn = DBUtil.getConnection()) {
+                conn.setAutoCommit(false);
+                try {
+                    String penalizeSql = "SELECT user_id FROM event_participants WHERE event_id = ? "
+                        + "AND UPPER(role) = 'PARTICIPANT' AND (present IS NULL OR present = 0)";
+                    try (PreparedStatement ps = conn.prepareStatement(penalizeSql)) {
+                        ps.setInt(1, eventId);
+                        try (ResultSet prs = ps.executeQuery()) {
+                            while (prs.next()) {
+                                UserDAO.extendEventRestrictionForNoShow(prs.getInt("user_id"));
+                            }
+                        }
+                    }
+                    try (PreparedStatement fin = conn.prepareStatement(
+                        "UPDATE events SET attendance_finalized = 1 WHERE id = ?")) {
+                        fin.setInt(1, eventId);
+                        fin.executeUpdate();
+                    }
+                    conn.commit();
+                } catch (SQLException ex) {
+                    conn.rollback();
+                    ex.printStackTrace();
+                } finally {
+                    conn.setAutoCommit(true);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static boolean eventIsCurrentlyInProgress(Event e) {
+        if (e == null || e.getDate() == null || e.getTime() == null || e.getEndTime() == null) {
+            return false;
+        }
+        try {
+            LocalDate d = LocalDate.parse(e.getDate());
+            LocalTime start = LocalTime.parse(e.getTime());
+            LocalTime end = LocalTime.parse(e.getEndTime());
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime startDt = LocalDateTime.of(d, start);
+            LocalDateTime endDt = LocalDateTime.of(d, end);
+            return !now.isBefore(startDt) && now.isBefore(endDt);
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
+    /**
+     * @return null if event missing; empty list if valid host/in-progress but no participants
+     */
+    public static List<AttendanceParticipant> getAttendanceListForHost(int hostUserId, int eventId) {
+        Event e = getEventById(eventId);
+        if (e == null || e.getCreatorId() != hostUserId || !eventIsCurrentlyInProgress(e)) {
+            return null;
+        }
+        List<AttendanceParticipant> out = new ArrayList<>();
+        String sql = "SELECT ep.user_id, u.username, ep.present FROM event_participants ep "
+            + "JOIN users u ON u.id = ep.user_id WHERE ep.event_id = ? AND UPPER(ep.role) = 'PARTICIPANT' "
+            + "ORDER BY u.username ASC";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, eventId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Boolean presentVal = null;
+                    Object o = rs.getObject("present");
+                    if (o != null) {
+                        presentVal = ((Number) o).intValue() != 0;
+                    }
+                    out.add(new AttendanceParticipant(rs.getInt("user_id"), rs.getString("username"), presentVal));
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return null;
+        }
+        return out;
+    }
+
+    public static boolean saveAttendanceMarks(int hostUserId, int eventId, Map<Integer, Boolean> marks) {
+        if (marks == null || marks.isEmpty()) {
+            return false;
+        }
+        Event ev = getEventById(eventId);
+        if (ev == null || ev.getCreatorId() != hostUserId || !eventIsCurrentlyInProgress(ev)) {
+            return false;
+        }
+        try (Connection conn = DBUtil.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                String sql = "UPDATE event_participants SET present = ? WHERE event_id = ? AND user_id = ? AND UPPER(role) = 'PARTICIPANT'";
+                try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                    for (Map.Entry<Integer, Boolean> en : marks.entrySet()) {
+                        ps.setBoolean(1, en.getValue());
+                        ps.setInt(2, eventId);
+                        ps.setInt(3, en.getKey());
+                        if (ps.executeUpdate() != 1) {
+                            conn.rollback();
+                            return false;
+                        }
+                    }
+                }
+                conn.commit();
+                return true;
+            } catch (SQLException ex) {
+                conn.rollback();
+                ex.printStackTrace();
+                return false;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public static boolean isApprovedLocation(String location) {
@@ -99,6 +319,7 @@ public class EventDAO {
     }
 
     public static boolean insertEventWithHostAndInvites(Event event, List<Integer> inviteeIds) {
+        LAST_INSERT_EVENT_ERROR.remove();
         String eventSql = "INSERT INTO events (activity_type, location, date, time, end_time, max_participants, current_participants, is_public, creator_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         String participantSql = "INSERT INTO event_participants (event_id, user_id, role) VALUES (?, ?, ?)";
         String inviteSql = "INSERT INTO event_invites (event_id, inviter_id, invitee_id, status) VALUES (?, ?, ?, 'PENDING')";
@@ -157,12 +378,14 @@ public class EventDAO {
                 return true;
             } catch (SQLException e) {
                 conn.rollback();
+                LAST_INSERT_EVENT_ERROR.set(e.getMessage());
                 e.printStackTrace();
                 return false;
             } finally {
                 conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
+            LAST_INSERT_EVENT_ERROR.set(e.getMessage());
             e.printStackTrace();
         }
         return false;
@@ -207,6 +430,10 @@ public class EventDAO {
     }
 
     public static JoinEventStatus joinEvent(int userId, int eventId) {
+        if (UserDAO.isEventActionBlocked(userId)) {
+            return JoinEventStatus.EVENT_ACTION_BLOCKED;
+        }
+
         String eventSql = "SELECT id, date, time, end_time, max_participants, current_participants, creator_id, activity_type, location "
                         + "FROM events WHERE id = ? FOR UPDATE";
         String alreadyJoinedSql = "SELECT 1 FROM event_participants WHERE event_id = ? AND user_id = ? LIMIT 1";
@@ -511,7 +738,7 @@ public class EventDAO {
         return invites;
     }
 
-    public enum RespondInviteStatus { SUCCESS, INVITE_NOT_FOUND, EVENT_FULL, TIME_CONFLICT, DB_ERROR }
+    public enum RespondInviteStatus { SUCCESS, INVITE_NOT_FOUND, EVENT_FULL, TIME_CONFLICT, PENALTY_BLOCKED, DB_ERROR }
 
     public static RespondInviteStatus respondToInvite(int inviteId, int userId, boolean accept) {
         String fetchSql  = "SELECT event_id FROM event_invites WHERE id = ? AND invitee_id = ? AND status = 'PENDING'";
@@ -546,6 +773,8 @@ public class EventDAO {
                 return RespondInviteStatus.EVENT_FULL;
             } else if (joinStatus == JoinEventStatus.TIME_CONFLICT) {
                 return RespondInviteStatus.TIME_CONFLICT;
+            } else if (joinStatus == JoinEventStatus.EVENT_ACTION_BLOCKED) {
+                return RespondInviteStatus.PENALTY_BLOCKED;
             } else {
                 return RespondInviteStatus.DB_ERROR;
             }

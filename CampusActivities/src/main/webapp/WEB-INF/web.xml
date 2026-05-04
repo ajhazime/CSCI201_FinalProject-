@@ -62,7 +62,19 @@
   </servlet-mapping>
   <servlet-mapping>
     <servlet-name>EventServlet</servlet-name>
+    <url-pattern>/upcomingEvents</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>EventServlet</servlet-name>
     <url-pattern>/respondInvite</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>EventServlet</servlet-name>
+    <url-pattern>/eventAttendance</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>EventServlet</servlet-name>
+    <url-pattern>/markAttendance</url-pattern>
   </servlet-mapping>
 
   <servlet>
@@ -95,7 +107,7 @@
   <servlet>
     <servlet-name>LocationRatingServlet</servlet-name>
     <servlet-class>com.usc.campusactivities.LocationRatingServlet</servlet-class>
-</servlet>
+  </servlet>
 
 <servlet-mapping>
     <servlet-name>LocationRatingServlet</servlet-name>

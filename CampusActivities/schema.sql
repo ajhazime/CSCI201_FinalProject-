@@ -14,7 +14,8 @@ USE campusactivities;
     lastName VARCHAR(50),
     avgRating DOUBLE DEFAULT 0,
     preferredLocations TEXT,                                                                                            
-    penaltyTracked BOOLEAN DEFAULT false
+    penaltyTracked BOOLEAN DEFAULT false,
+    event_restriction_until DATETIME NULL DEFAULT NULL
   );                
 
  CREATE TABLE events (
@@ -28,6 +29,7 @@ USE campusactivities;
     current_participants INT DEFAULT 0,
     is_public BOOLEAN DEFAULT true,
     creator_id INT,
+    attendance_finalized BOOLEAN NOT NULL DEFAULT FALSE,
     INDEX idx_events_date_time (date, time, end_time),
     FOREIGN KEY (creator_id) REFERENCES users(id)                                                                       
   );
@@ -44,6 +46,7 @@ CREATE TABLE event_participants (
     event_id INT NOT NULL,
     user_id INT NOT NULL,
     role VARCHAR(20) DEFAULT 'PARTICIPANT',
+    present TINYINT NULL DEFAULT NULL,
     joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uniq_event_user (event_id, user_id),
     INDEX idx_event_participants_user_event (user_id, event_id),
@@ -73,6 +76,10 @@ CREATE TABLE user_availability (
     endTime TIME NOT NULL,                                                                                              
     FOREIGN KEY (userID) REFERENCES users(id)
  );                                                                                                                      
+
+INSERT INTO users (username, password, email, interests, skill_level, penalties)
+VALUES ('guest', 'guest12345678', 'guest@usc.edu', 'fitness,wellness', 'beginner', 0);
+
                   
  INSERT INTO facilities (name, description) VALUES                                                                       
  	('Lyon Center', 'USC gym facility'),

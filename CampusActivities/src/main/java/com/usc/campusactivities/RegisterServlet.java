@@ -68,9 +68,18 @@ public class RegisterServlet extends HttpServlet {
                 return;
             }
 
-            User user = new User(0, username, password, email, interests != null ? interests : "", skillLevel != null ? skillLevel : "beginner", 0);
-            
-            System.out.println("Attempting to insert user: " + username);
+            String trimUser = username.trim();
+            if (UserDAO.getUserByUsername(trimUser) != null) {
+                response.setStatus(HttpServletResponse.SC_CONFLICT);
+                jsonResponse.addProperty("success", false);
+                jsonResponse.addProperty("message", "That username is already registered.");
+                response.getWriter().write(jsonResponse.toString());
+                return;
+            }
+
+            User user = new User(0, trimUser, password, email.trim(), interests != null ? interests : "", skillLevel != null ? skillLevel : "beginner", 0);
+
+            System.out.println("Attempting to insert user: " + trimUser);
             if (UserDAO.insertUser(user)) {
                 System.out.println("User inserted successfully");
                 jsonResponse.addProperty("success", true);
@@ -79,7 +88,12 @@ public class RegisterServlet extends HttpServlet {
                 System.out.println("Failed to insert user");
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 jsonResponse.addProperty("success", false);
-                jsonResponse.addProperty("message", "Registration failed - could not save to database");
+                String detail = UserDAO.consumeInsertUserError();
+                jsonResponse.addProperty(
+                    "message",
+                    detail != null && !detail.isEmpty()
+                        ? detail
+                        : "Registration failed — could not save to database.");
             }
             
             response.getWriter().write(jsonResponse.toString());

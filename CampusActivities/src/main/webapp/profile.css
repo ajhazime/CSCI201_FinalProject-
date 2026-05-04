@@ -341,6 +341,48 @@ a {
     color: #4f6f55;
 }
 
+.status-box.status-warning {
+    background: #fdecee;
+    border: 1px solid rgba(157, 34, 53, 0.25);
+}
+
+.status-box.status-warning p {
+    color: #6b3a42;
+}
+
+.status-warn-icon {
+    background: var(--usc-cardinal) !important;
+}
+
+.status-text-block {
+    flex: 1;
+    min-width: 0;
+}
+
+.status-timer-wrap {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(157, 34, 53, 0.15);
+}
+
+.status-timer-label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.status-timer {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--usc-cardinal);
+    letter-spacing: 0.04em;
+}
+
 /* RESPONSIVE */
 
 @media (max-width: 1000px) {

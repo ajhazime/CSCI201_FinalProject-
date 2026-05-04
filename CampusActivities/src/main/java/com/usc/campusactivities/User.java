@@ -13,6 +13,8 @@ public class User {
     private boolean penaltyTracked;
     private double avgRating;
     private String preferredLocations; // comma separated
+    /** ISO-8601 instant; while server now is before this, user cannot join/create events */
+    private String eventRestrictionUntil;
 
     public User() {}
 
@@ -62,4 +64,12 @@ public class User {
 
     public String getPreferredLocations() { return preferredLocations; }
     public void setPreferredLocations(String preferredLocations) { this.preferredLocations = preferredLocations; }
+
+    public String getEventRestrictionUntil() {
+        return eventRestrictionUntil;
+    }
+
+    public void setEventRestrictionUntil(String eventRestrictionUntil) {
+        this.eventRestrictionUntil = eventRestrictionUntil;
+    }
 }

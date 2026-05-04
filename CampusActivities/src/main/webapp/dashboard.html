@@ -65,10 +65,10 @@
                         <div class="stat-change">Start matching with others</div>
                     </div>
 
-                    <div class="stat-card">
+                    <div class="stat-card stat-card-penalty" id="statPenaltyCard">
                         <div class="stat-label">Penalty Score</div>
-                        <div class="stat-value">0</div>
-                        <div class="stat-change">All clear</div>
+                        <div class="stat-value" id="statPenaltyValue">—</div>
+                        <div class="stat-change" id="statPenaltySub">Loading…</div>
                     </div>
 
                     <div class="stat-card">
@@ -79,20 +79,19 @@
                 </section>
 
                 <section class="dashboard-grid">
-                    <a href="activities.html" class="dashboard-card">
+                    <div class="dashboard-card" id="upcomingEventsCard">
                         <div class="card-header">
                             <h3>Upcoming events</h3>
-                            <span>View all →</span>
+                            <a href="activities.html" class="card-header-link">View all →</a>
                         </div>
 
-                        <div class="card-body">
-                            <div class="empty-state">
+                        <div class="card-body" id="upcomingEventsBody">
+                            <div class="empty-state empty-state--compact">
                                 <div class="empty-icon">📅</div>
-                                <h4>No upcoming events shown</h4>
-                                <p>Browse activities or create a new event to get started.</p>
+                                <h4>Loading…</h4>
                             </div>
                         </div>
-                    </a>
+                    </div>
 
                     <a href="matching.html" class="dashboard-card">
                         <div class="card-header">
@@ -136,7 +135,7 @@
                                     <span>Matches</span>
                                 </div>
                                 <div class="profile-mini-stat">
-                                    <strong>0</strong>
+                                    <strong id="profilePenaltyMini">—</strong>
                                     <span>Penalties</span>
                                 </div>
                             </div>
@@ -195,14 +194,11 @@
                     <div class="dashboard-card">
                         <div class="card-header">
                             <h3>Recent penalties</h3>
-                            <span>Details →</span>
+                            <a href="profile.html" class="card-header-link">Profile →</a>
                         </div>
 
-                        <div class="penalty-empty">
-                            <div>
-                                <div class="penalty-check">✓</div>
-                                <div>No penalties on record</div>
-                            </div>
+                        <div id="recentPenaltiesBody" class="penalty-body">
+                            <div class="penalty-loading">Loading…</div>
                         </div>
                     </div>
                 </section>
