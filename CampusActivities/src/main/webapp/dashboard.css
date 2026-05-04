@@ -303,6 +303,12 @@ a.dashboard-card:hover {
     font-size: 14px;
 }
 
+a.card-header-link {
+    color: var(--usc-cardinal);
+    font-weight: bold;
+    font-size: 14px;
+}
+
 .card-body {
     padding: 0;
 }
@@ -327,6 +333,55 @@ a.dashboard-card:hover {
 .empty-state p {
     margin: 0;
     line-height: 1.45;
+}
+
+.empty-state--compact {
+    min-height: 180px;
+    padding: 20px;
+}
+
+.empty-state--compact h4 {
+    font-size: 16px;
+    margin: 8px 0 0 0;
+}
+
+#upcomingEventsBody .empty-state {
+    min-height: 200px;
+}
+
+.upcoming-row {
+    padding: 14px 22px;
+    border-bottom: 1px solid var(--border);
+}
+
+.upcoming-row:last-child {
+    border-bottom: none;
+}
+
+.upcoming-title {
+    font-weight: 800;
+    font-size: 15px;
+    color: var(--text);
+}
+
+.upcoming-meta {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+}
+
+.upcoming-when {
+    font-size: 12px;
+    color: var(--usc-cardinal);
+    font-weight: 700;
+    margin-top: 6px;
+}
+
+.upcoming-error {
+    padding: 24px;
+    text-align: center;
+    color: var(--usc-cardinal);
+    font-size: 14px;
 }
 
 .empty-icon {
@@ -436,6 +491,79 @@ a.dashboard-card:hover {
 }
 
 /* PENALTIES */
+
+.stat-card-warn {
+    border: 1px solid rgba(157, 34, 53, 0.35);
+    box-shadow: 0 0 0 3px rgba(157, 34, 53, 0.08);
+}
+
+.penalty-body {
+    padding: 18px 22px 22px 22px;
+    min-height: 160px;
+}
+
+.penalty-loading {
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.penalty-loading.error {
+    color: var(--usc-cardinal);
+}
+
+.penalty-active {
+    padding: 4px 0 8px 0;
+}
+
+.penalty-active-title {
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--text);
+    margin-bottom: 8px;
+}
+
+.penalty-active-desc {
+    margin: 0 0 14px 0;
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.45;
+}
+
+.penalty-timer-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.penalty-timer {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--usc-cardinal);
+    letter-spacing: 0.04em;
+}
+
+.penalty-record-only {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.5;
+}
+
+.penalty-record-title {
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.penalty-empty-state {
+    min-height: 160px;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    color: var(--muted);
+}
 
 .penalty-empty {
     min-height: 210px;

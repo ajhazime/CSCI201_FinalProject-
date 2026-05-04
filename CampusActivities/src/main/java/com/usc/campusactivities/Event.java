@@ -17,6 +17,10 @@ public class Event {
     private int currentParticipants;
     private int creatorId;
     private boolean isPublic = true;
+    /** Set when listing events for the current viewer (GET /events). */
+    private boolean currentUserJoined;
+    /** Present flag from event_participants for the viewer; null if not joined or unset. */
+    private Boolean participantPresent;
 
     public Event() {}
 
@@ -61,6 +65,12 @@ public class Event {
 
     public boolean isPublic() { return isPublic; }
     public void setPublic(boolean isPublic) { this.isPublic = isPublic; }
+
+    public boolean isCurrentUserJoined() { return currentUserJoined; }
+    public void setCurrentUserJoined(boolean currentUserJoined) { this.currentUserJoined = currentUserJoined; }
+
+    public Boolean getParticipantPresent() { return participantPresent; }
+    public void setParticipantPresent(Boolean participantPresent) { this.participantPresent = participantPresent; }
 
     public boolean isFull() {
         return currentParticipants >= maxParticipants;

@@ -23,6 +23,18 @@ public class UserServlet extends HttpServlet {
             return;
         }
 
+        if ("true".equalsIgnoreCase(request.getParameter("me"))) {
+            User fresh = UserDAO.getUserById(currentUser.getId());
+            if (fresh == null) {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                response.getWriter().write("{}");
+                return;
+            }
+            fresh.setPassword("");
+            response.getWriter().write(new Gson().toJson(fresh));
+            return;
+        }
+
         String idParam = request.getParameter("id");
         if (idParam != null) {
             try {
@@ -31,6 +43,8 @@ public class UserServlet extends HttpServlet {
                     response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                     response.getWriter().write("{}");
                 } else {
+                    target.setPassword("");
+                    target.setEventRestrictionUntil(null);
                     response.getWriter().write(new Gson().toJson(target));
                 }
             } catch (NumberFormatException e) {

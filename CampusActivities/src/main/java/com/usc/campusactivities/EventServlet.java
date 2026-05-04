@@ -6,12 +6,18 @@ import java.io.*;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 public class EventServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        EventDAO.finalizeAttendanceForEndedEvents();
+
         if ("/createEvent".equals(request.getServletPath())) {
             response.sendRedirect(request.getContextPath() + "/createEvent.html");
             return;
@@ -46,12 +52,43 @@ public class EventServlet extends HttpServlet {
             return;
         }
 
-        List<Event> events = EventDAO.getAllEvents();
+        if ("/upcomingEvents".equals(request.getServletPath())) {
+            HttpSession upSession = request.getSession(false);
+            User upUser = upSession == null ? null : (User) upSession.getAttribute("user");
+            if (upUser == null) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("[]");
+                return;
+            }
+            int limit = 8;
+            try {
+                limit = Integer.parseInt(request.getParameter("limit"));
+            } catch (Exception ignored) {
+            }
+            response.getWriter().write(new Gson().toJson(EventDAO.getUpcomingEventsForUser(upUser.getId(), limit)));
+            return;
+        }
+
+        if ("/eventAttendance".equals(request.getServletPath())) {
+            eventAttendanceGet(request, response);
+            return;
+        }
+
+        HttpSession eventsSession = request.getSession(false);
+        User eventsViewer = eventsSession == null ? null : (User) eventsSession.getAttribute("user");
+        int viewerId = eventsViewer == null ? -1 : eventsViewer.getId();
+        List<Event> events = EventDAO.getAllEventsForViewer(viewerId);
         response.getWriter().write(new Gson().toJson(events));
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        EventDAO.finalizeAttendanceForEndedEvents();
+
         String servletPath = request.getServletPath();
+        if ("/markAttendance".equals(servletPath)) {
+            markAttendancePost(request, response);
+            return;
+        }
         if ("/sendInvite".equals(servletPath)) {
             sendInvite(request, response);
             return;
@@ -85,6 +122,14 @@ public class EventServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             jsonResponse.addProperty("success", false);
             jsonResponse.addProperty("message", "User not authenticated");
+            response.getWriter().write(jsonResponse.toString());
+            return;
+        }
+
+        if (UserDAO.isEventActionBlocked(user.getId())) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "You cannot create events while a no-show penalty is active.");
             response.getWriter().write(jsonResponse.toString());
             return;
         }
@@ -172,7 +217,12 @@ public class EventServlet extends HttpServlet {
         } else {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             jsonResponse.addProperty("success", false);
-            jsonResponse.addProperty("message", "Failed to create event");
+            String detail = EventDAO.consumeLastInsertEventError();
+            jsonResponse.addProperty(
+                "message",
+                detail != null && !detail.isEmpty()
+                    ? "Could not create event: " + detail
+                    : "Failed to create event");
         }
         
         response.getWriter().write(jsonResponse.toString());
@@ -229,6 +279,11 @@ public class EventServlet extends HttpServlet {
                 response.setStatus(HttpServletResponse.SC_CONFLICT);
                 jsonResponse.addProperty("success", false);
                 jsonResponse.addProperty("message", "Event is full");
+                break;
+            case EVENT_ACTION_BLOCKED:
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                jsonResponse.addProperty("success", false);
+                jsonResponse.addProperty("message", "You cannot join events while a no-show penalty is active.");
                 break;
             default:
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -450,10 +505,146 @@ public class EventServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_CONFLICT);
             jsonResponse.addProperty("success", false);
             jsonResponse.addProperty("message", "You have a scheduling conflict with this event");
+        } else if (status == EventDAO.RespondInviteStatus.PENALTY_BLOCKED) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "You cannot join events while a no-show penalty is active.");
         } else {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             jsonResponse.addProperty("success", false);
             jsonResponse.addProperty("message", "Failed to respond to invite");
+        }
+        response.getWriter().write(jsonResponse.toString());
+    }
+
+    private void eventAttendanceGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        JsonObject jsonResponse = new JsonObject();
+        HttpSession session = request.getSession(false);
+        User user = session == null ? null : (User) session.getAttribute("user");
+        if (user == null) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "User not authenticated");
+            response.getWriter().write(jsonResponse.toString());
+            return;
+        }
+
+        int eventId;
+        try {
+            eventId = Integer.parseInt(request.getParameter("eventId"));
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "eventId is required");
+            response.getWriter().write(jsonResponse.toString());
+            return;
+        }
+
+        Event ev = EventDAO.getEventById(eventId);
+        if (ev == null) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "Event not found");
+            response.getWriter().write(jsonResponse.toString());
+            return;
+        }
+        if (ev.getCreatorId() != user.getId()) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "Only the host can take attendance");
+            response.getWriter().write(jsonResponse.toString());
+            return;
+        }
+        if (!EventDAO.eventIsCurrentlyInProgress(ev)) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "Attendance can only be taken while the event is in progress");
+            response.getWriter().write(jsonResponse.toString());
+            return;
+        }
+
+        List<AttendanceParticipant> list = EventDAO.getAttendanceListForHost(user.getId(), eventId);
+        if (list == null) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "Could not load participants");
+            response.getWriter().write(jsonResponse.toString());
+            return;
+        }
+
+        jsonResponse.addProperty("success", true);
+        jsonResponse.add("participants", new Gson().toJsonTree(list));
+        response.getWriter().write(jsonResponse.toString());
+    }
+
+    private void markAttendancePost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        JsonObject jsonResponse = new JsonObject();
+        HttpSession session = request.getSession(false);
+        User user = session == null ? null : (User) session.getAttribute("user");
+        if (user == null) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "User not authenticated");
+            response.getWriter().write(jsonResponse.toString());
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        try (java.io.BufferedReader reader = request.getReader()) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+        }
+
+        JsonObject body;
+        try {
+            body = new Gson().fromJson(sb.toString(), JsonObject.class);
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "Invalid JSON body");
+            response.getWriter().write(jsonResponse.toString());
+            return;
+        }
+
+        if (body == null || !body.has("eventId") || !body.has("marks")) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "eventId and marks array required");
+            response.getWriter().write(jsonResponse.toString());
+            return;
+        }
+
+        int eventId = body.get("eventId").getAsInt();
+        JsonArray marks = body.getAsJsonArray("marks");
+        Map<Integer, Boolean> map = new HashMap<>();
+        for (JsonElement el : marks) {
+            JsonObject m = el.getAsJsonObject();
+            map.put(m.get("userId").getAsInt(), m.get("present").getAsBoolean());
+        }
+
+        if (map.isEmpty()) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "marks cannot be empty");
+            response.getWriter().write(jsonResponse.toString());
+            return;
+        }
+
+        if (EventDAO.saveAttendanceMarks(user.getId(), eventId, map)) {
+            jsonResponse.addProperty("success", true);
+            jsonResponse.addProperty("message", "Attendance saved");
+        } else {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "Could not save attendance (wrong event, not host, or not in progress)");
         }
         response.getWriter().write(jsonResponse.toString());
     }
