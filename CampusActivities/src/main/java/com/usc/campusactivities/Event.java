@@ -97,23 +97,4 @@ public class Event {
                     continue;
                 }
 
-                LocalDate existingDate = LocalDate.parse(existing.getDate());
-                if (!existingDate.equals(newDate)) {
-                    continue;
-                }
-
-                LocalTime existingStart = LocalTime.parse(existing.getTime());
-                LocalTime existingEnd = LocalTime.parse(existing.getEndTime());
-
-                // Overlap rule: (startA < endB) AND (endA > startB)
-                if (newStart.isBefore(existingEnd) && newEnd.isAfter(existingStart)) {
-                    return true;
-                }
-            }
-        } catch (DateTimeParseException e) {
-            return false;
-        }
-
-        return false;
-    }
-}
+                LocalDate existingDate = LocalDate.pa
