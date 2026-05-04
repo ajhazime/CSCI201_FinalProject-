@@ -92,4 +92,18 @@ public class RegisterServlet extends HttpServlet {
                 jsonResponse.addProperty(
                     "message",
                     detail != null && !detail.isEmpty()
-               
+                        ? detail
+                        : "Registration failed — could not save to database.");
+            }
+            
+            response.getWriter().write(jsonResponse.toString());
+        } catch (Exception e) {
+            System.out.println("Exception in RegisterServlet: " + e.getMessage());
+            e.printStackTrace();
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "Server error: " + e.getMessage());
+            response.getWriter().write(jsonResponse.toString());
+        }
+    }
+}

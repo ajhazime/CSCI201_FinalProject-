@@ -55,4 +55,21 @@ public class UserServlet extends HttpServlet {
         }
 
         String query = request.getParameter("query");
-        int li
+        int limit = 20;
+        try {
+            if (request.getParameter("limit") != null) {
+                limit = Integer.parseInt(request.getParameter("limit"));
+            }
+        } catch (NumberFormatException ignored) {
+        }
+
+        List<User> users;
+        if (query == null || query.trim().isEmpty()) {
+            users = UserDAO.suggestInviteUsers(currentUser.getId(), limit);
+        } else {
+            users = UserDAO.searchUsers(query, limit, currentUser.getId());
+        }
+        response.getWriter().write(new Gson().toJson(users));
+    }
+}
+

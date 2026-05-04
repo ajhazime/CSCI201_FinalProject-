@@ -150,4 +150,76 @@ public class UserDAO {
                     User u = new User(
                         rs.getInt("id"),
                         rs.getString("username"),
-                   
+                        rs.getString("password"),
+                        rs.getString("email"),
+                        rs.getString("interests"),
+                        rs.getString("skill_level"),
+                        rs.getInt("penalties")
+                    );
+                    attachRestrictionUntil(rs, u);
+                    return u;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static List<User> suggestInviteUsers(int currentUserId, int limit) {
+        if (limit <= 0 || limit > 50) {
+            limit = 10;
+        }
+
+        User me = getUserById(currentUserId);
+        String mySkill = me == null ? null : me.getSkillLevel();
+        String firstInterest = null;
+        if (me != null && me.getInterests() != null && !me.getInterests().trim().isEmpty()) {
+            String[] parts = me.getInterests().split(",");
+            if (parts.length > 0) {
+                firstInterest = parts[0].trim().toLowerCase();
+            }
+        }
+
+        List<User> users = new ArrayList<>();
+
+        String sql = "SELECT id, username, email, interests, skill_level, penalties "
+                   + "FROM users "
+                   + "WHERE id <> ? "
+                   + "ORDER BY "
+                   + "  CASE WHEN ? IS NOT NULL AND LOWER(skill_level) = LOWER(?) THEN 0 ELSE 1 END, "
+                   + "  CASE WHEN ? IS NOT NULL AND LOWER(interests) LIKE ? THEN 0 ELSE 1 END, "
+                   + "  username ASC "
+                   + "LIMIT ?";
+
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, currentUserId);
+            stmt.setString(2, mySkill);
+            stmt.setString(3, mySkill);
+            stmt.setString(4, firstInterest);
+            stmt.setString(5, firstInterest == null ? null : "%" + firstInterest + "%");
+            stmt.setInt(6, limit);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    users.add(new User(
+                        rs.getInt("id"),
+                        rs.getString("username"),
+                        "",
+                        rs.getString("email"),
+                        rs.getString("interests"),
+                        rs.getString("skill_level"),
+                        rs.getInt("penalties")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return users;
+    }
+
+    // Other methods as needed
+}

@@ -61,4 +61,17 @@ public class LoginServlet extends HttpServlet {
                 } else {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     jsonResponse.addProperty("success", false);
-        
+                    jsonResponse.addProperty("message", "Invalid credentials");
+                }
+            }
+
+            response.getWriter().write(jsonResponse.toString());
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "Server error: " + e.getMessage());
+            e.printStackTrace();
+            response.getWriter().write(jsonResponse.toString());
+        }
+    }
+}
