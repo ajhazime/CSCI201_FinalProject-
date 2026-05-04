@@ -1,6 +1,0 @@
-INDEX VERSION 1.4+/Users/home/Downloads/CSCI201_FinalProject-/.metadata/.plugins/org.eclipse.wst.jsdt.core/indexes
-1199620836.index
-2288972643.index
-2657200434.index
-897871155.index
-3405375160.index

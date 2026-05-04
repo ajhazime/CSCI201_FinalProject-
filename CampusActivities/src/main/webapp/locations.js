@@ -73,7 +73,6 @@ let markers = [];
 
 document.addEventListener("DOMContentLoaded", function () {
     setupUserInfo();
-    setupLogout();
     initMap();
     loadFacilities();
 });
@@ -90,28 +89,6 @@ function setupUserInfo() {
         nameEl.textContent = "Guest User";
         initialsEl.textContent = "GU";
     }
-}
-
-function setupLogout() {
-    const logoutLink = document.getElementById("logoutLink");
-
-    if (!logoutLink) {
-        return;
-    }
-
-    logoutLink.addEventListener("click", function (e) {
-        e.preventDefault();
-
-        fetch("/CampusActivities/logout")
-            .then(function () {
-                sessionStorage.removeItem("user");
-                window.location.href = "login.html";
-            })
-            .catch(function () {
-                sessionStorage.removeItem("user");
-                window.location.href = "login.html";
-            });
-    });
 }
 
 function initMap() {

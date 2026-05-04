@@ -48,6 +48,22 @@
     <servlet-name>EventServlet</servlet-name>
     <url-pattern>/cancelEvent</url-pattern>
   </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>EventServlet</servlet-name>
+    <url-pattern>/myEvents</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>EventServlet</servlet-name>
+    <url-pattern>/sendInvite</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>EventServlet</servlet-name>
+    <url-pattern>/myInvites</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>EventServlet</servlet-name>
+    <url-pattern>/respondInvite</url-pattern>
+  </servlet-mapping>
 
   <servlet>
     <servlet-name>LogoutServlet</servlet-name>

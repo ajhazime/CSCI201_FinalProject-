@@ -1,6 +1,6 @@
-DROP DATABASE IF EXISTS CampusActivities;                                                                               
-CREATE DATABASE campusActivities;
-USE CampusActivities;                                                                                                   
+DROP DATABASE IF EXISTS campusactivities;                                                                               
+CREATE DATABASE campusactivities;
+USE campusactivities;                                                                                                   
                   
   CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -74,6 +74,25 @@ CREATE TABLE user_availability (
     FOREIGN KEY (userID) REFERENCES users(id)
  );                                                                                                                      
                   
+CREATE TABLE user_ratings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    rater_id INT NOT NULL,
+    ratee_id INT NOT NULL,
+    score INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_rater_ratee (rater_id, ratee_id),
+    FOREIGN KEY (rater_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (ratee_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE password_reset_tokens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    token VARCHAR(64) NOT NULL UNIQUE,
+    expires_at TIMESTAMP NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
  INSERT INTO facilities (name, description) VALUES                                                                       
  	('Lyon Center', 'USC gym facility'),
  	('USC Village Fitness Center', 'USC Village gym'),                                                                      

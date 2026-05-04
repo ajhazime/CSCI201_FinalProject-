@@ -34,22 +34,6 @@ if (!user) {
     }
 }
 
-const logoutLink = document.getElementById("logoutLink");
-if (logoutLink) {
-    logoutLink.addEventListener("click", function (e) {
-        e.preventDefault();
-        fetch("/CampusActivities/logout")
-            .then(function () {
-                sessionStorage.removeItem("user");
-                window.location.href = "login.html";
-            })
-            .catch(function () {
-                sessionStorage.removeItem("user");
-                window.location.href = "login.html";
-            });
-    });
-}
-
 const activitySelect = document.getElementById("activityType");
 const locationSelect = document.getElementById("location");
 const dateInput = document.getElementById("date");
@@ -219,7 +203,7 @@ async function loadInviteSuggestions() {
     if (!inviteSuggestions) return;
     inviteSuggestions.innerHTML = `<div class="small-note">Loading suggestions...</div>`;
     try {
-        const res = await fetch(`/CampusActivities/api/users?limit=8`);
+        const res = await fetch(campusFitUrl("api/users?limit=8"));
         if (res.status === 401) {
             window.location.href = "login.html";
             return;
@@ -253,7 +237,9 @@ function wireInviteSearch() {
             }
             inviteStatus.textContent = "Searching...";
             try {
-                const res = await fetch(`/CampusActivities/api/users?query=${encodeURIComponent(q)}&limit=15`);
+                const res = await fetch(
+                    campusFitUrl(`api/users?query=${encodeURIComponent(q)}&limit=15`)
+                );
                 if (res.status === 401) {
                     window.location.href = "login.html";
                     return;
