@@ -4,6 +4,59 @@
     <meta charset="UTF-8">
     <title>USC FIT Profile</title>
     <link rel="stylesheet" href="profile.css">
+    <style>
+        .rating-stars { display: flex; gap: 4px; align-items: center; margin: 6px 0; }
+        .star { font-size: 20px; cursor: pointer; color: #ccc; transition: color 0.15s; }
+        .star.filled { color: #FFCC00; }
+        .star.interactive:hover, .star.interactive:hover ~ .star { color: #FFCC00; }
+        .rating-count { font-size: 13px; color: #666; margin-left: 6px; }
+        .avg-rating-val { font-size: 22px; font-weight: bold; margin-right: 4px; }
+
+        .edit-form { display: none; margin-top: 16px; }
+        .edit-form.open { display: block; }
+        .edit-form .form-row { margin-bottom: 12px; }
+        .edit-form label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #555; }
+        .edit-form input[type="text"], .edit-form select {
+            width: 100%; padding: 9px 10px; border: 1px solid #ddd;
+            border-radius: 6px; font-size: 14px; box-sizing: border-box;
+        }
+        .edit-form .edit-actions { display: flex; gap: 8px; margin-top: 14px; }
+        .edit-form .btn-save {
+            background: #992233; color: white; border: none;
+            padding: 9px 20px; border-radius: 6px; font-weight: bold;
+            cursor: pointer; font-size: 14px;
+        }
+        .edit-form .btn-cancel {
+            background: #eee; color: #333; border: none;
+            padding: 9px 16px; border-radius: 6px; cursor: pointer; font-size: 14px;
+        }
+        .loc-dropdown-wrapper { position: relative; }
+        .loc-dropdown-btn { width: 100%; padding: 9px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; text-align: left; background: white; cursor: pointer; color: #555; display: flex; justify-content: space-between; align-items: center; }
+        .loc-dropdown-btn:hover { border-color: #aaa; }
+        .loc-dropdown-panel { position: absolute; top: calc(100% + 2px); left: 0; right: 0; background: white; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); z-index: 200; padding: 8px; display: none; }
+        .loc-dropdown-panel.open { display: block; }
+        .check-item { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: normal; color: #333; cursor: pointer; padding: 5px 4px; border-radius: 4px; }
+        .check-item:hover { background: #f5f5f5; }
+        .check-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: #992233; cursor: pointer; flex-shrink: 0; }
+        .other-text-input { margin-top: 6px; width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; box-sizing: border-box; color: #333; display: none; }
+
+        .btn-edit-profile {
+            background: none; border: 1px solid #992233; color: #992233;
+            padding: 6px 14px; border-radius: 6px; cursor: pointer;
+            font-size: 13px; font-weight: bold; margin-top: 10px;
+        }
+        .edit-msg { margin-top: 10px; padding: 8px 12px; border-radius: 6px; font-size: 13px; display: none; }
+        .edit-msg.success { background: #e8f5ea; color: #2f6b40; display: block; }
+        .edit-msg.error { background: #fde8e8; color: #992233; display: block; }
+
+        .rate-section { margin-top: 12px; }
+        .rate-section p { font-size: 13px; color: #555; margin-bottom: 6px; }
+        .rate-submit { background: #992233; color: white; border: none; padding: 8px 18px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; margin-top: 8px; }
+        .rate-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+        .rate-msg { margin-top: 8px; font-size: 13px; display: none; }
+        .rate-msg.success { color: #2f6b40; display: block; }
+        .rate-msg.error { color: #992233; display: block; }
+    </style>
 </head>
 <body>
     <div class="profile-wrapper">
@@ -18,7 +71,7 @@
                     <div class="sidebar-avatar" id="sidebarInitials">U</div>
                     <div>
                         <div class="sidebar-user-name" id="sidebarUsername">User</div>
-                        <div class="sidebar-user-level">Student</div>
+                        <a href="logout" id="logoutLink" style="font-size:12px;color:#992233;font-weight:bold;text-decoration:none;">Sign out</a>
                     </div>
                 </div>
 
@@ -34,7 +87,6 @@
                 <a href="profile.html" class="sidebar-link active">Profile</a>
             </div>
 
-            <a href="logout" id="logoutLink" class="logout-button">Sign out</a>
         </aside>
 
         <main class="profile-content">
@@ -86,6 +138,62 @@
                             <span>Penalties</span>
                             <strong id="infoPenalties">0</strong>
                         </div>
+
+                        <!-- Edit profile button — only shown for own profile -->
+                        <button class="btn-edit-profile" id="editProfileBtn" style="display:none;" onclick="toggleEditForm()">Edit Profile</button>
+
+                        <form class="edit-form" id="editProfileForm" onsubmit="submitEditProfile(event)">
+                            <div class="form-row">
+                                <label>Interests (comma-separated)</label>
+                                <input type="text" id="editInterests" placeholder="e.g. Basketball, Swimming, Yoga">
+                            </div>
+                            <div class="form-row">
+                                <label>Skill Level</label>
+                                <select id="editSkillLevel">
+                                    <option value="beginner">Beginner</option>
+                                    <option value="intermediate">Intermediate</option>
+                                    <option value="competitive">Competitive</option>
+                                </select>
+                            </div>
+                            <div class="form-row">
+                                <label>Preferred Locations</label>
+                                <div class="loc-dropdown-wrapper">
+                                    <button type="button" class="loc-dropdown-btn" id="locDropdownBtn" onclick="toggleLocDropdown()">
+                                        <span id="locDropdownLabel">Choose locations</span>
+                                        <span id="locDropdownArrow">▼</span>
+                                    </button>
+                                    <div class="loc-dropdown-panel" id="locDropdownPanel">
+                                        <label class="check-item"><input type="checkbox" class="loc-cb" value="Lyon Center"> Lyon Center</label>
+                                        <label class="check-item"><input type="checkbox" class="loc-cb" value="USC Village Fitness Center"> USC Village Fitness Center</label>
+                                        <label class="check-item"><input type="checkbox" class="loc-cb" value="Uytengsu Aquatics Center"> Uytengsu Aquatics Center</label>
+                                        <label class="check-item"><input type="checkbox" class="loc-cb" value="HSC Fitness Center"> HSC Fitness Center</label>
+                                        <label class="check-item"><input type="checkbox" class="loc-cb" value="PED South Gym"> PED South Gym</label>
+                                        <label class="check-item"><input type="checkbox" id="otherLocationCheck"> Other</label>
+                                        <input type="text" id="otherLocationText" class="other-text-input" placeholder="enter other locations comma-separated">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-row" style="margin-top:8px;border-top:1px solid #eee;padding-top:14px;">
+                                <label style="color:#666;">Change Security Question <span style="font-weight:normal;font-size:11px;">(optional — leave blank to keep current)</span></label>
+                                <select id="editSecurityQuestion" style="margin-top:6px;">
+                                    <option value="">— keep current question —</option>
+                                    <option value="What was the name of your first pet?">What was the name of your first pet?</option>
+                                    <option value="What city were you born in?">What city were you born in?</option>
+                                    <option value="What elementary school did you attend?">What elementary school did you attend?</option>
+                                    <option value="What is your mother's maiden name?">What is your mother's maiden name?</option>
+                                    <option value="What street did you grow up on?">What street did you grow up on?</option>
+                                </select>
+                            </div>
+                            <div class="form-row">
+                                <label>New Security Answer</label>
+                                <input type="text" id="editSecurityAnswer" placeholder="Leave blank to keep current answer">
+                            </div>
+                            <div class="edit-actions">
+                                <button type="submit" class="btn-save">Save Changes</button>
+                                <button type="button" class="btn-cancel" onclick="toggleEditForm()">Cancel</button>
+                            </div>
+                            <div class="edit-msg" id="editMsg"></div>
+                        </form>
                     </div>
 
                     <div class="profile-card">
@@ -96,11 +204,39 @@
                     </div>
 
                     <div class="profile-card">
+                        <h3>Preferred Locations</h3>
+                        <div id="preferredLocationTags" class="interest-tags">
+                            <span class="empty-text">No preferred locations set.</span>
+                        </div>
+                    </div>
+
+                    <!-- Rating card -->
+                    <div class="profile-card">
+                        <h3>Rating</h3>
+                        <div class="rating-stars" id="avgRatingStars"></div>
+                        <div style="font-size:13px;color:#666;" id="ratingCountLabel">No ratings yet.</div>
+
+                        <!-- Rate this user — only shown when viewing someone else's profile -->
+                        <div class="rate-section" id="rateSection" style="display:none;">
+                            <p>Rate this user:</p>
+                            <div class="rating-stars" id="rateStars">
+                                <span class="star interactive" data-val="1">&#9733;</span>
+                                <span class="star interactive" data-val="2">&#9733;</span>
+                                <span class="star interactive" data-val="3">&#9733;</span>
+                                <span class="star interactive" data-val="4">&#9733;</span>
+                                <span class="star interactive" data-val="5">&#9733;</span>
+                            </div>
+                            <button class="rate-submit" id="rateSubmitBtn" onclick="submitRating()">Submit Rating</button>
+                            <div class="rate-msg" id="rateMsg"></div>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
                         <h3>Activity Summary</h3>
 
                         <div class="summary-grid">
                             <div class="summary-box">
-                                <strong>0</strong>
+                                <strong id="eventsJoinedCount">0</strong>
                                 <span>Events Joined</span>
                             </div>
 
@@ -110,15 +246,15 @@
                             </div>
 
                             <div class="summary-box">
-                                <strong>0</strong>
-                                <span>Reviews</span>
+                                <strong id="ratingsReceivedCount">0</strong>
+                                <span>Ratings</span>
                             </div>
                         </div>
                     </div>
 
                     <div class="profile-card">
                         <h3>Status</h3>
-                        <div class="status-box">
+                        <div class="status-box" id="statusBox">
                             <div class="status-check">✓</div>
                             <div>
                                 <strong>Account in good standing</strong>

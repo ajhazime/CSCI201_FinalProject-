@@ -1,7 +1,7 @@
 package com.usc.campusactivities;
 
-import jakarta.servlet.*;
-import jakarta.servlet.http.*;
+import javax.servlet.*;
+import javax.servlet.http.*;
 import java.io.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -36,7 +36,7 @@ public class LoginServlet extends HttpServlet {
             } else {
                 user = UserDAO.getUserByUsername(username);
             }
-            if (user != null && user.getPassword().equals(password)) {
+            if (user != null && PasswordUtil.checkPassword(password, user.getPassword())) {
                 HttpSession session = request.getSession();
                 session.setAttribute("user", user);
                 jsonResponse.addProperty("success", true);
