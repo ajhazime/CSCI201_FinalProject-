@@ -6,15 +6,17 @@ USE campusactivities;
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    email VARCHAR(100) NOT NULL,                                                                                        
+    email VARCHAR(100) NOT NULL,
     interests TEXT,
-    skill_level VARCHAR(20),                                                                                            
+    skill_level VARCHAR(20),
     penalties INT DEFAULT 0,
     firstName VARCHAR(50),
     lastName VARCHAR(50),
     avgRating DOUBLE DEFAULT 0,
-    preferredLocations TEXT,                                                                                            
-    penaltyTracked BOOLEAN DEFAULT false
+    preferredLocations TEXT,
+    penaltyTracked BOOLEAN DEFAULT false,
+    security_question VARCHAR(255),
+    security_answer_hash VARCHAR(255)
   );                
 
  CREATE TABLE events (

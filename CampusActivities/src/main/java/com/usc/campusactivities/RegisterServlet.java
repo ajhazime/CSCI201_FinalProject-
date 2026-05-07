@@ -1,7 +1,7 @@
 package com.usc.campusactivities;
 
-import jakarta.servlet.*;
-import jakarta.servlet.http.*;
+import javax.servlet.*;
+import javax.servlet.http.*;
 import java.io.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -19,6 +19,8 @@ public class RegisterServlet extends HttpServlet {
             String email = request.getParameter("email");
             String interests = request.getParameter("interests");
             String skillLevel = request.getParameter("skillLevel");
+            String securityQuestion = request.getParameter("securityQuestion");
+            String securityAnswer = request.getParameter("securityAnswer");
 
             System.out.println("=== Register Request ===");
             System.out.println("Username: " + username);
@@ -68,11 +70,20 @@ public class RegisterServlet extends HttpServlet {
                 return;
             }
 
-            User user = new User(0, username, password, email, interests != null ? interests : "", skillLevel != null ? skillLevel : "beginner", 0);
+            User user = new User(0, username, PasswordUtil.hashPassword(password), email, interests != null ? interests : "", skillLevel != null ? skillLevel : "beginner", 0);
             
             System.out.println("Attempting to insert user: " + username);
             if (UserDAO.insertUser(user)) {
                 System.out.println("User inserted successfully");
+                // Save security question if provided
+                if (securityQuestion != null && !securityQuestion.trim().isEmpty()
+                        && securityAnswer != null && !securityAnswer.trim().isEmpty()) {
+                    User newUser = UserDAO.getUserByUsername(username);
+                    if (newUser != null) {
+                        String hashedAnswer = PasswordUtil.hashPassword(securityAnswer.trim().toLowerCase());
+                        UserDAO.saveSecurityQuestion(newUser.getId(), securityQuestion.trim(), hashedAnswer);
+                    }
+                }
                 jsonResponse.addProperty("success", true);
                 jsonResponse.addProperty("message", "Registration successful");
             } else {
