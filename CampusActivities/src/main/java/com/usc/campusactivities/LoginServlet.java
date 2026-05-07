@@ -52,7 +52,7 @@ public class LoginServlet extends HttpServlet {
                 }
             } else {
                 user = UserDAO.getUserByUsername(userKey);
-                if (user != null && user.getPassword().equals(password)) {
+                if (user != null && PasswordUtil.checkPassword(password, user.getPassword())) {
                     HttpSession session = request.getSession();
                     session.setAttribute("user", user);
                     jsonResponse.addProperty("success", true);

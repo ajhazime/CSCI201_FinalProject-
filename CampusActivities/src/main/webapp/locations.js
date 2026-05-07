@@ -71,14 +71,18 @@ let selectedRating = 0;
 let map;
 let markers = [];
 
-document.addEventListener("DOMContentLoaded", function () {
-    setupUserInfo();
-    initMap();
-    loadFacilities();
-});
+setupUserInfo();
+initMap();
+loadFacilities();
+
+function showGuestModal() {
+    const modal = document.getElementById("guestModal");
+    if (modal) modal.style.display = "flex";
+}
 
 function setupUserInfo() {
     const user = JSON.parse(sessionStorage.getItem("user"));
+    const isGuest = !user || user.id === 0;
     const nameEl = document.getElementById("sidebarName");
     const initialsEl = document.getElementById("profileInitials");
 
@@ -86,8 +90,25 @@ function setupUserInfo() {
         nameEl.textContent = user.username;
         initialsEl.textContent = getInitials(user.username);
     } else {
-        nameEl.textContent = "Guest User";
-        initialsEl.textContent = "GU";
+        nameEl.textContent = "Guest";
+        initialsEl.textContent = "G";
+    }
+
+    if (isGuest) {
+        ["dashboardLink", "matchesLink", "profileLink"].forEach(function(id) {
+            const link = document.getElementById(id);
+            if (link) {
+                link.href = "#";
+                link.addEventListener("click", function(e) { e.preventDefault(); showGuestModal(); });
+            }
+        });
+
+        const modal = document.getElementById("guestModal");
+        if (modal) {
+            modal.addEventListener("click", function(e) {
+                if (e.target === modal) modal.style.display = "none";
+            });
+        }
     }
 }
 

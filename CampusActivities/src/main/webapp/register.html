@@ -175,6 +175,23 @@
                 </select>
             </div>
 
+            <div class="form-group">
+                <label>Security Question</label>
+                <select name="securityQuestion" required>
+                    <option value="">Select a question...</option>
+                    <option value="What was the name of your first pet?">What was the name of your first pet?</option>
+                    <option value="What city were you born in?">What city were you born in?</option>
+                    <option value="What elementary school did you attend?">What elementary school did you attend?</option>
+                    <option value="What is your mother's maiden name?">What is your mother's maiden name?</option>
+                    <option value="What street did you grow up on?">What street did you grow up on?</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Security Answer</label>
+                <input type="text" name="securityAnswer" placeholder="Your answer (case-insensitive)" required>
+            </div>
+
             <input type="submit" value="Register" id="submitBtn">
         </form>
 

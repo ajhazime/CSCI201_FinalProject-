@@ -19,6 +19,8 @@ public class RegisterServlet extends HttpServlet {
             String email = request.getParameter("email");
             String interests = request.getParameter("interests");
             String skillLevel = request.getParameter("skillLevel");
+            String securityQuestion = request.getParameter("securityQuestion");
+            String securityAnswer = request.getParameter("securityAnswer");
 
             System.out.println("=== Register Request ===");
             System.out.println("Username: " + username);
@@ -77,11 +79,20 @@ public class RegisterServlet extends HttpServlet {
                 return;
             }
 
-            User user = new User(0, trimUser, password, email.trim(), interests != null ? interests : "", skillLevel != null ? skillLevel : "beginner", 0);
+            User user = new User(0, trimUser, PasswordUtil.hashPassword(password), email.trim(), interests != null ? interests : "", skillLevel != null ? skillLevel : "beginner", 0);
 
             System.out.println("Attempting to insert user: " + trimUser);
             if (UserDAO.insertUser(user)) {
                 System.out.println("User inserted successfully");
+                // Save security question if provided
+                if (securityQuestion != null && !securityQuestion.trim().isEmpty()
+                        && securityAnswer != null && !securityAnswer.trim().isEmpty()) {
+                    User newUser = UserDAO.getUserByUsername(trimUser);
+                    if (newUser != null) {
+                        String hashedAnswer = PasswordUtil.hashPassword(securityAnswer.trim().toLowerCase());
+                        UserDAO.saveSecurityQuestion(newUser.getId(), securityQuestion.trim(), hashedAnswer);
+                    }
+                }
                 jsonResponse.addProperty("success", true);
                 jsonResponse.addProperty("message", "Registration successful");
             } else {
