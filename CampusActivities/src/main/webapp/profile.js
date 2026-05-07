@@ -201,6 +201,7 @@ if (isOwnProfile) {
             populateProfile(data.user);
             applyStatusPanel(data.user, true);
             loadAvailability();
+            loadProfileStats();
             document.getElementById("eventsJoinedCount").textContent = data.eventsJoined || 0;
             document.getElementById("ratingsReceivedCount").textContent = data.ratingCount || 0;
             document.getElementById("editProfileBtn").style.display = "inline-block";
@@ -554,6 +555,24 @@ function getInitials(name) {
     const parts = String(name).trim().split(/\s+/);
     if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
     return (parts[0][0] + parts[1][0]).toUpperCase();
+}
+
+function profileStatsUrl() {
+    return typeof campusFitUrl === "function" ? campusFitUrl("api/stats") : "api/stats";
+}
+
+function loadProfileStats() {
+    fetch(profileStatsUrl(), { credentials: "same-origin" })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            var el = document.getElementById("summaryEventsJoined");
+            if (el) el.textContent = data.eventsJoined;
+            el = document.getElementById("summaryMatches");
+            if (el) el.textContent = data.matchesFound;
+            el = document.getElementById("summaryReviews");
+            if (el) el.textContent = data.reviewsCount;
+        })
+        .catch(function () { /* non-critical */ });
 }
 
 function availUrl() {

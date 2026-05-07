@@ -52,36 +52,36 @@
 
             <main class="dashboard-main">
                 <section class="stats-grid">
-                    <div class="stat-card">
+                    <a href="activities.html" class="stat-card">
                         <div class="stat-label">Events Joined</div>
-                        <div class="stat-value">0</div>
-                        <div class="stat-change">No events joined yet</div>
-                    </div>
+                        <div class="stat-value" id="statEventsJoined">—</div>
+                        <div class="stat-change" id="statEventsJoinedSub">Loading…</div>
+                    </a>
 
-                    <div class="stat-card">
+                    <a href="matching.html" class="stat-card">
                         <div class="stat-label">Matches Found</div>
-                        <div class="stat-value">0</div>
-                        <div class="stat-change">Start matching with others</div>
-                    </div>
+                        <div class="stat-value" id="statMatchesFound">—</div>
+                        <div class="stat-change" id="statMatchesFoundSub">Loading…</div>
+                    </a>
 
-                    <div class="stat-card stat-card-penalty" id="statPenaltyCard">
+                    <a href="profile.html" class="stat-card stat-card-penalty" id="statPenaltyCard">
                         <div class="stat-label">Penalty Score</div>
                         <div class="stat-value" id="statPenaltyValue">—</div>
                         <div class="stat-change" id="statPenaltySub">Loading…</div>
-                    </div>
+                    </a>
 
-                    <div class="stat-card">
+                    <a href="locations.html" class="stat-card">
                         <div class="stat-label">Facility Reviews</div>
-                        <div class="stat-value">0</div>
-                        <div class="stat-change">Review a facility</div>
-                    </div>
+                        <div class="stat-value" id="statReviews">—</div>
+                        <div class="stat-change" id="statReviewsSub">Loading…</div>
+                    </a>
                 </section>
 
                 <section class="dashboard-grid">
-                    <div class="dashboard-card" id="upcomingEventsCard">
+                    <a href="activities.html" class="dashboard-card" id="upcomingEventsCard">
                         <div class="card-header">
                             <h3>Upcoming events</h3>
-                            <a href="activities.html" class="card-header-link">View all →</a>
+                            <span class="card-header-link">View all →</span>
                         </div>
 
                         <div class="card-body" id="upcomingEventsBody">
@@ -90,7 +90,7 @@
                                 <h4>Loading…</h4>
                             </div>
                         </div>
-                    </div>
+                    </a>
 
                     <a href="matching.html" class="dashboard-card">
                         <div class="card-header">
@@ -98,7 +98,7 @@
                             <span>See all →</span>
                         </div>
 
-                        <div class="card-body">
+                        <div class="card-body" id="suggestedMatchesBody">
                             <div class="empty-state">
                                 <div class="empty-icon">🤝</div>
                                 <h4>No matches shown yet</h4>
@@ -126,11 +126,11 @@
 
                             <div class="profile-mini-stats">
                                 <div class="profile-mini-stat">
-                                    <strong>0</strong>
+                                    <strong id="profileEventsMini">0</strong>
                                     <span>Events</span>
                                 </div>
                                 <div class="profile-mini-stat">
-                                    <strong>0</strong>
+                                    <strong id="profileMatchesMini">0</strong>
                                     <span>Matches</span>
                                 </div>
                                 <div class="profile-mini-stat">
@@ -190,16 +190,16 @@
                         </div>
                     </a>
 
-                    <div class="dashboard-card">
+                    <a href="profile.html" class="dashboard-card">
                         <div class="card-header">
                             <h3>Recent penalties</h3>
-                            <a href="profile.html" class="card-header-link">Profile →</a>
+                            <span class="card-header-link">Profile →</span>
                         </div>
 
                         <div id="recentPenaltiesBody" class="penalty-body">
                             <div class="penalty-loading">Loading…</div>
                         </div>
-                    </div>
+                    </a>
                 </section>
             </main>
         </div>
