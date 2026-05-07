@@ -116,6 +116,15 @@
 
 
   <servlet>
+    <servlet-name>StatsServlet</servlet-name>
+    <servlet-class>com.usc.campusactivities.StatsServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>StatsServlet</servlet-name>
+    <url-pattern>/api/stats</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
     <servlet-name>AvailabilityServlet</servlet-name>
     <servlet-class>com.usc.campusactivities.AvailabilityServlet</servlet-class>
   </servlet>

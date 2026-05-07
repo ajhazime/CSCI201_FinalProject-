@@ -175,6 +175,8 @@ if (!user) {
 
     loadDashboardPenaltyInfo();
     loadUpcomingEvents();
+    loadStats();
+    loadSuggestedMatches();
 }
 
 function upcomingEventsUrl() {
@@ -246,6 +248,80 @@ function loadUpcomingEvents() {
             body.innerHTML =
                 '<div class="upcoming-error">Could not load upcoming events.</div>';
         });
+}
+
+function statsUrl() {
+    return typeof campusFitUrl === "function" ? campusFitUrl("api/stats") : "api/stats";
+}
+
+function loadStats() {
+    fetch(statsUrl(), { credentials: "same-origin" })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            var joined = data.eventsJoined;
+            var matches = data.matchesFound;
+            var reviews = data.reviewsCount;
+
+            var el = document.getElementById("statEventsJoined");
+            if (el) el.textContent = joined;
+            var sub = document.getElementById("statEventsJoinedSub");
+            if (sub) sub.textContent = joined === 1 ? "1 event joined" : joined + " events joined";
+
+            el = document.getElementById("statMatchesFound");
+            if (el) el.textContent = matches;
+            sub = document.getElementById("statMatchesFoundSub");
+            if (sub) sub.textContent = matches === 1 ? "1 match found" : matches + " matches found";
+
+            el = document.getElementById("profileEventsMini");
+            if (el) el.textContent = joined;
+            el = document.getElementById("profileMatchesMini");
+            if (el) el.textContent = matches;
+
+            el = document.getElementById("statReviews");
+            if (el) el.textContent = reviews;
+            sub = document.getElementById("statReviewsSub");
+            if (sub) sub.textContent = reviews === 1 ? "1 review left" : reviews + " reviews left";
+        })
+        .catch(function () { /* silently fail — stats are non-critical */ });
+}
+
+function matchesApiUrl() {
+    return typeof campusFitUrl === "function" ? campusFitUrl("api/matches") : "api/matches";
+}
+
+function loadSuggestedMatches() {
+    var body = document.getElementById("suggestedMatchesBody");
+    if (!body) return;
+
+    fetch(matchesApiUrl(), { credentials: "same-origin" })
+        .then(function (res) {
+            if (res.status === 401) { window.location.href = "login.html"; return null; }
+            return res.json();
+        })
+        .then(function (data) {
+            if (!data || data.length === 0) return;
+            var preview = data.slice(0, 2);
+            body.innerHTML = preview.map(buildSuggestedMatchRow).join("");
+        })
+        .catch(function () { /* leave default empty state */ });
+}
+
+function buildSuggestedMatchRow(match) {
+    var initials = getInitials(match.username || "?");
+    var score = match.matchScore || 0;
+    var skill = match.skillLevel ? match.skillLevel.charAt(0).toUpperCase() + match.skillLevel.slice(1).toLowerCase() : "";
+    var firstInterest = match.interests ? match.interests.split(",")[0].trim() : "";
+    var meta = [skill, firstInterest].filter(Boolean).join(" · ");
+    return (
+        '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border,#eee)">' +
+            '<div style="width:36px;height:36px;border-radius:50%;background:#992233;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0">' + escapeHtmlDash(initials) + '</div>' +
+            '<div style="flex:1;min-width:0">' +
+                '<div style="font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtmlDash(match.username || "") + '</div>' +
+                '<div style="font-size:12px;color:#666">' + escapeHtmlDash(meta) + '</div>' +
+            '</div>' +
+            '<div style="font-weight:700;color:#992233;font-size:14px;flex-shrink:0">' + score + '%</div>' +
+        '</div>'
+    );
 }
 
 function getInitials(name) {
