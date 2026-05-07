@@ -55,14 +55,14 @@
                 <section class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-label">Events Joined</div>
-                        <div class="stat-value">0</div>
-                        <div class="stat-change">No events joined yet</div>
+                        <div class="stat-value" id="statEventsJoined">—</div>
+                        <div class="stat-change" id="statEventsJoinedSub">Loading…</div>
                     </div>
 
                     <div class="stat-card">
                         <div class="stat-label">Matches Found</div>
-                        <div class="stat-value">0</div>
-                        <div class="stat-change">Start matching with others</div>
+                        <div class="stat-value" id="statMatchesFound">—</div>
+                        <div class="stat-change" id="statMatchesFoundSub">Loading…</div>
                     </div>
 
                     <div class="stat-card stat-card-penalty" id="statPenaltyCard">
@@ -73,8 +73,8 @@
 
                     <div class="stat-card">
                         <div class="stat-label">Facility Reviews</div>
-                        <div class="stat-value">0</div>
-                        <div class="stat-change">Review a facility</div>
+                        <div class="stat-value" id="statReviews">—</div>
+                        <div class="stat-change" id="statReviewsSub">Loading…</div>
                     </div>
                 </section>
 
@@ -99,7 +99,7 @@
                             <span>See all →</span>
                         </div>
 
-                        <div class="card-body">
+                        <div class="card-body" id="suggestedMatchesBody">
                             <div class="empty-state">
                                 <div class="empty-icon">🤝</div>
                                 <h4>No matches shown yet</h4>
@@ -127,11 +127,11 @@
 
                             <div class="profile-mini-stats">
                                 <div class="profile-mini-stat">
-                                    <strong>0</strong>
+                                    <strong id="profileEventsMini">0</strong>
                                     <span>Events</span>
                                 </div>
                                 <div class="profile-mini-stat">
-                                    <strong>0</strong>
+                                    <strong id="profileMatchesMini">0</strong>
                                     <span>Matches</span>
                                 </div>
                                 <div class="profile-mini-stat">
