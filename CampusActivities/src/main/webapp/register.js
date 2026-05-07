@@ -37,6 +37,17 @@ registerForm.addEventListener('submit', function(e) {
         document.getElementById('error').textContent = 'Please use a valid USC email (@usc.edu)';
         return;
     }
+
+    const secQuestion = this.querySelector('[name="securityQuestion"]').value;
+    const secAnswer = this.querySelector('[name="securityAnswer"]').value.trim();
+    if (!secQuestion) {
+        document.getElementById('error').textContent = 'Please select a security question.';
+        return;
+    }
+    if (!secAnswer) {
+        document.getElementById('error').textContent = 'Please provide a security answer.';
+        return;
+    }
     
     const params = new URLSearchParams(new FormData(this));
     

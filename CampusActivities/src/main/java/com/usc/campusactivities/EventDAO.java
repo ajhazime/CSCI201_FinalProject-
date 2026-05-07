@@ -738,7 +738,7 @@ public class EventDAO {
         return invites;
     }
 
-    public enum RespondInviteStatus { SUCCESS, INVITE_NOT_FOUND, EVENT_FULL, TIME_CONFLICT, PENALTY_BLOCKED, DB_ERROR }
+    public enum RespondInviteStatus { SUCCESS, INVITE_NOT_FOUND, EVENT_FULL, TIME_CONFLICT, DB_ERROR }
 
     public static RespondInviteStatus respondToInvite(int inviteId, int userId, boolean accept) {
         String fetchSql  = "SELECT event_id FROM event_invites WHERE id = ? AND invitee_id = ? AND status = 'PENDING'";
@@ -773,8 +773,6 @@ public class EventDAO {
                 return RespondInviteStatus.EVENT_FULL;
             } else if (joinStatus == JoinEventStatus.TIME_CONFLICT) {
                 return RespondInviteStatus.TIME_CONFLICT;
-            } else if (joinStatus == JoinEventStatus.EVENT_ACTION_BLOCKED) {
-                return RespondInviteStatus.PENALTY_BLOCKED;
             } else {
                 return RespondInviteStatus.DB_ERROR;
             }

@@ -6,15 +6,20 @@ USE campusactivities;
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    email VARCHAR(100) NOT NULL,                                                                                        
+    email VARCHAR(100) NOT NULL,
     interests TEXT,
-    skill_level VARCHAR(20),                                                                                            
+    skill_level VARCHAR(20),
     penalties INT DEFAULT 0,
     firstName VARCHAR(50),
     lastName VARCHAR(50),
     avgRating DOUBLE DEFAULT 0,
     preferredLocations TEXT,                                                                                            
     penaltyTracked BOOLEAN DEFAULT false,
+    event_restriction_until DATETIME NULL DEFAULT NULL
+    preferredLocations TEXT,
+    penaltyTracked BOOLEAN DEFAULT false,
+    security_question VARCHAR(255),
+    security_answer_hash VARCHAR(255)
     event_restriction_until DATETIME NULL DEFAULT NULL
   );                
 
@@ -81,6 +86,25 @@ INSERT INTO users (username, password, email, interests, skill_level, penalties)
 VALUES ('guest', 'guest12345678', 'guest@usc.edu', 'fitness,wellness', 'beginner', 0);
 
                   
+CREATE TABLE user_ratings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    rater_id INT NOT NULL,
+    ratee_id INT NOT NULL,
+    score INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_rater_ratee (rater_id, ratee_id),
+    FOREIGN KEY (rater_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (ratee_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE password_reset_tokens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    token VARCHAR(64) NOT NULL UNIQUE,
+    expires_at TIMESTAMP NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
  INSERT INTO facilities (name, description) VALUES                                                                       
  	('Lyon Center', 'USC gym facility'),
  	('USC Village Fitness Center', 'USC Village gym'),                                                                      
