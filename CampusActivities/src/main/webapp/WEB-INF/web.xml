@@ -114,4 +114,14 @@
     <url-pattern>/api/locations</url-pattern>
 </servlet-mapping>
 
+
+  <servlet>
+    <servlet-name>AvailabilityServlet</servlet-name>
+    <servlet-class>com.usc.campusactivities.AvailabilityServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>AvailabilityServlet</servlet-name>
+    <url-pattern>/availability</url-pattern>
+  </servlet-mapping>
+
 </web-app>

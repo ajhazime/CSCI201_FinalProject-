@@ -186,6 +186,8 @@ const viewingUserId = params.get("userId");
 if (!sessionUser) {
     /* redirecting */
 } else if (viewingUserId) {
+    const availCard = document.getElementById("availabilityCard");
+    if (availCard) availCard.hidden = true;
     fetch(usersApiBase() + "?id=" + encodeURIComponent(viewingUserId), {
         credentials: "same-origin"
     })
@@ -211,6 +213,7 @@ if (!sessionUser) {
         });
 } else if (sessionUser) {
     populateProfile(sessionUser, false);
+    loadAvailability();
     fetch(meApiUrl(), { credentials: "same-origin" })
         .then(function (res) {
             if (res.status === 401) {
@@ -297,6 +300,142 @@ function getInitials(name) {
     }
 
     return (parts[0][0] + parts[1][0]).toUpperCase();
+}
+
+function availUrl() {
+    return typeof campusFitUrl === "function" ? campusFitUrl("availability") : "availability";
+}
+
+function loadAvailability() {
+    fetch(availUrl(), { credentials: "same-origin" })
+        .then(function (res) { return res.json(); })
+        .then(function (slots) { renderAvailability(slots); })
+        .catch(function () { renderAvailability([]); });
+}
+
+var AVAIL_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+function renderBlock(start, end) {
+    return (
+        '<div class="avail-block">' +
+            '<input type="time" class="avail-start" value="' + start + '">' +
+            '<span class="avail-to">to</span>' +
+            '<input type="time" class="avail-end" value="' + end + '">' +
+            '<button type="button" class="avail-remove-btn">×</button>' +
+        '</div>'
+    );
+}
+
+function renderAvailability(saved) {
+    var grid = document.getElementById("availGrid");
+    if (!grid) return;
+
+    var savedMap = {};
+    AVAIL_DAYS.forEach(function (day) { savedMap[day] = []; });
+    (saved || []).forEach(function (s) {
+        if (savedMap[s.day]) savedMap[s.day].push(s);
+    });
+
+    grid.innerHTML = AVAIL_DAYS.map(function (day) {
+        var slots = savedMap[day];
+        var checked = slots.length > 0 ? "checked" : "";
+        var hidden = slots.length > 0 ? "" : "avail-blocks-hidden";
+        var blocksHtml = (slots.length > 0 ? slots : [{ startTime: "", endTime: "" }])
+            .map(function (s) { return renderBlock(s.startTime || "", s.endTime || ""); })
+            .join("");
+        return (
+            '<div class="avail-row">' +
+                '<label class="avail-day-label">' +
+                    '<input type="checkbox" id="avail-cb-' + day + '" ' + checked + '>' +
+                    '<span>' + day + '</span>' +
+                '</label>' +
+                '<div class="avail-blocks-wrap ' + hidden + '" id="avail-wrap-' + day + '">' +
+                    '<div class="avail-blocks" id="avail-blocks-' + day + '">' + blocksHtml + '</div>' +
+                    '<button type="button" class="add-block-btn" data-day="' + day + '">+ Add time block</button>' +
+                '</div>' +
+            '</div>'
+        );
+    }).join("");
+
+    bindAvailabilityForm();
+}
+
+function bindAvailabilityForm() {
+    AVAIL_DAYS.forEach(function (day) {
+        var cb = document.getElementById("avail-cb-" + day);
+        var wrap = document.getElementById("avail-wrap-" + day);
+        if (!cb || !wrap) return;
+        cb.addEventListener("change", function () {
+            wrap.classList.toggle("avail-blocks-hidden", !cb.checked);
+        });
+    });
+
+    var grid = document.getElementById("availGrid");
+    if (grid) {
+        grid.addEventListener("click", function (e) {
+            if (e.target.classList.contains("add-block-btn")) {
+                var day = e.target.getAttribute("data-day");
+                var list = document.getElementById("avail-blocks-" + day);
+                if (list) list.insertAdjacentHTML("beforeend", renderBlock("", ""));
+            }
+            if (e.target.classList.contains("avail-remove-btn")) {
+                var block = e.target.closest(".avail-block");
+                var list = block ? block.parentElement : null;
+                if (!block || !list) return;
+                if (list.querySelectorAll(".avail-block").length > 1) {
+                    block.remove();
+                } else {
+                    block.querySelectorAll("input[type='time']").forEach(function (inp) { inp.value = ""; });
+                }
+            }
+        });
+    }
+
+    var saveBtn = document.getElementById("saveAvailBtn");
+    if (!saveBtn) return;
+    saveBtn.addEventListener("click", async function () {
+        saveBtn.disabled = true;
+        try {
+            var res = await saveAvailability();
+            var data = await res.json();
+            showAvailMsg(data.success ? "Saved!" : (data.message || "Error saving."), data.success);
+        } catch (e) {
+            showAvailMsg("Error saving availability.", false);
+        }
+        saveBtn.disabled = false;
+    });
+}
+
+function showAvailMsg(text, ok) {
+    var el = document.getElementById("availMsg");
+    if (!el) return;
+    el.textContent = text;
+    el.className = "avail-msg " + (ok ? "avail-msg-ok" : "avail-msg-err");
+    setTimeout(function () { el.textContent = ""; el.className = "avail-msg"; }, 3000);
+}
+
+function saveAvailability() {
+    var slots = [];
+
+    AVAIL_DAYS.forEach(function (day) {
+        var cb = document.getElementById("avail-cb-" + day);
+        if (!cb || !cb.checked) return;
+        var list = document.getElementById("avail-blocks-" + day);
+        if (!list) return;
+        list.querySelectorAll(".avail-block").forEach(function (block) {
+            var start = block.querySelector(".avail-start").value;
+            var end = block.querySelector(".avail-end").value;
+            if (!start || !end || start >= end) return;
+            slots.push({ day: day, startTime: start, endTime: end });
+        });
+    });
+
+    return fetch(availUrl(), {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(slots)
+    });
 }
 
 function escapeHtml(value) {
