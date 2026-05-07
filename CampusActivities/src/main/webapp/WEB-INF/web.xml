@@ -133,4 +133,31 @@
     <url-pattern>/availability</url-pattern>
   </servlet-mapping>
 
+  <servlet>
+    <servlet-name>RecoveryServlet</servlet-name>
+    <servlet-class>com.usc.campusactivities.RecoveryServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>RecoveryServlet</servlet-name>
+    <url-pattern>/api/recovery</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>ProfileServlet</servlet-name>
+    <servlet-class>com.usc.campusactivities.ProfileServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ProfileServlet</servlet-name>
+    <url-pattern>/api/profile</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>RatingServlet</servlet-name>
+    <servlet-class>com.usc.campusactivities.RatingServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>RatingServlet</servlet-name>
+    <url-pattern>/api/ratings</url-pattern>
+  </servlet-mapping>
+
 </web-app>
