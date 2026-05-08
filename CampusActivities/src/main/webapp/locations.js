@@ -17,8 +17,8 @@ const defaultFacilities = [
     },
     {
         id: 2,
-        name: "Village Gym",
-        displayName: "Village Gym",
+        name: "USC Village Fitness Center",
+        displayName: "Village Fitness Center",
         address: "USC Village, Los Angeles, CA 90089",
         shortAddress: "USC Village",
         hours: "Hours unavailable",
@@ -33,8 +33,8 @@ const defaultFacilities = [
     },
     {
         id: 3,
-        name: "Lyon Pool",
-        displayName: "Lyon Pool",
+        name: "Uytengsu Aquatics Center",
+        displayName: "Uytengsu Aquatics Center",
         address: "1026 W 34th St, Los Angeles, CA 90089",
         shortAddress: "Lyon Center",
         hours: "Hours unavailable",
@@ -49,13 +49,29 @@ const defaultFacilities = [
     },
     {
         id: 4,
-        name: "Galen Center",
-        displayName: "Galen Center",
-        address: "3400 S Figueroa St, Los Angeles, CA 90089",
-        shortAddress: "3400 S Figueroa St",
+        name: "HSC Fitness Center",
+        displayName: "HSC Fitness Center",
+        address: "1975 Zonal Ave, Los Angeles, CA 90033",
+        shortAddress: "Health Sciences Campus",
         hours: "Hours unavailable",
-        coords: [34.02132, -118.28092],
-        tags: ["Basketball", "Volleyball"],
+        coords: [34.04892, -118.27017],
+        tags: ["Cardio", "Weights"],
+        openSpots: null,
+        capacity: null,
+        occupancyPercent: null,
+        averageRating: 0,
+        reviewCount: 0,
+        reviews: []
+    },
+    {
+        id: 5,
+        name: "PED South Gym",
+        displayName: "PED South Gym",
+        address: "1150 W 37th St, Los Angeles, CA 90089",
+        shortAddress: "PED South",
+        hours: "Hours unavailable",
+        coords: [34.02024, -118.28560],
+        tags: ["Gym", "Courts"],
         openSpots: null,
         capacity: null,
         occupancyPercent: null,
@@ -169,6 +185,7 @@ function mergeBackendData(backendFacilities) {
             }
 
             match.reviews = backendFacility.reviews || [];
+            match.userReview = backendFacility.userReview || null;
         }
     });
 
@@ -283,22 +300,30 @@ function renderDetailPanel() {
             </div>
         </div>
 
-        <div class="detail-section-title">Leave a review</div>
-        <form id="reviewForm" class="review-form">
-            <label>Your rating</label>
-            <div id="starPicker" class="star-picker">
-                <span class="star-btn" data-value="1">★</span>
-                <span class="star-btn" data-value="2">★</span>
-                <span class="star-btn" data-value="3">★</span>
-                <span class="star-btn" data-value="4">★</span>
-                <span class="star-btn" data-value="5">★</span>
-            </div>
+        ${(function() {
+            const sessionUser = JSON.parse(sessionStorage.getItem("user"));
+            const isGuest = !sessionUser || sessionUser.id === 0;
+            if (isGuest) {
+                return `<div class="detail-section-title">Leave a review</div>
+                <div class="review-login-prompt"><a href="index.html">Log in</a> to leave a review.</div>`;
+            }
+            return `<div class="detail-section-title">${facility.userReview ? "Edit your review" : "Leave a review"}</div>
+            <form id="reviewForm" class="review-form">
+                <label>Your rating</label>
+                <div id="starPicker" class="star-picker">
+                    <span class="star-btn" data-value="1">★</span>
+                    <span class="star-btn" data-value="2">★</span>
+                    <span class="star-btn" data-value="3">★</span>
+                    <span class="star-btn" data-value="4">★</span>
+                    <span class="star-btn" data-value="5">★</span>
+                </div>
 
-            <label for="reviewText">Your review</label>
-            <textarea id="reviewText" placeholder="Write a short review of this facility..."></textarea>
+                <label for="reviewText">Your review</label>
+                <textarea id="reviewText" placeholder="Write a short review of this facility..."></textarea>
 
-            <button type="submit" class="submit-review-btn">Submit review</button>
-        </form>
+                <button type="submit" class="submit-review-btn">${facility.userReview ? "Update review" : "Submit review"}</button>
+            </form>`;
+        })()}
 
         <div class="detail-section-title">Student reviews</div>
         <div class="reviews-list">
@@ -323,23 +348,32 @@ function renderReviews(reviews) {
             <div class="review-item">
                 <div class="review-item-top">
                     <div>
-                        <div class="review-name">${escapeHtml(review.reviewerName || "Anonymous")}</div>
+                        <div class="review-name">${escapeHtml(review.username || "Anonymous")}</div>
                         <div class="star-text" style="font-size:18px;">${getStars(review.rating)}</div>
                     </div>
                     <div class="review-date">${escapeHtml(formatDate(review.createdAt))}</div>
                 </div>
-                <div class="review-text">${escapeHtml(review.reviewText || "No written review.")}</div>
+                <div class="review-text">${escapeHtml(review.review || "No written review.")}</div>
             </div>
         `;
     }).join("");
 }
 
 function bindReviewForm() {
+    const form = document.getElementById("reviewForm");
+    if (!form) return;
+
     selectedRating = 0;
 
     const starButtons = document.querySelectorAll(".star-btn");
-    const form = document.getElementById("reviewForm");
     const reviewText = document.getElementById("reviewText");
+
+    const facility = facilities.find(function (f) { return f.id === selectedFacilityId; });
+    if (facility && facility.userReview) {
+        selectedRating = facility.userReview.rating;
+        reviewText.value = facility.userReview.review || "";
+        paintSelectedStars();
+    }
 
     starButtons.forEach(function (button) {
         button.addEventListener("click", function () {
@@ -375,7 +409,7 @@ function bindReviewForm() {
         const formData = new URLSearchParams();
         formData.append("facilityId", facility.id);
         formData.append("rating", selectedRating);
-        formData.append("reviewText", text);
+        formData.append("review", text);
 
         try {
             const response = await fetch("api/locations", {
@@ -392,8 +426,17 @@ function bindReviewForm() {
                 throw new Error(result.message || "Could not submit review.");
             }
 
-            showMessage("Review submitted successfully.", "success");
-            await loadFacilities();
+            const wasEdit = !!facility.userReview;
+            const facilityIndex = facilities.findIndex(function (f) { return f.id === selectedFacilityId; });
+            if (facilityIndex !== -1) {
+                facilities[facilityIndex].userReview = result.userReview;
+                facilities[facilityIndex].averageRating = result.averageRating;
+                if (!wasEdit) {
+                    facilities[facilityIndex].reviewCount = (facilities[facilityIndex].reviewCount || 0) + 1;
+                }
+            }
+            showMessage(wasEdit ? "Review updated successfully." : "Review submitted successfully.", "success");
+            renderDetailPanel();
         } catch (error) {
             showMessage(error.message, "error");
         }

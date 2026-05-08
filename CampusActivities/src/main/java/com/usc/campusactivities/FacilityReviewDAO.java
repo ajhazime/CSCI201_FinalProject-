@@ -7,7 +7,9 @@ import java.util.List;
 public class FacilityReviewDAO {
 
     public static boolean insertReview(int facilityId, int userId, int rating, String review) {
-        String sql = "INSERT INTO facility_reviews (facility_id, user_id, rating, review) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO facility_reviews (facility_id, user_id, rating, comment) " +
+                     "VALUES (?, ?, ?, ?) " +
+                     "ON DUPLICATE KEY UPDATE rating = VALUES(rating), comment = VALUES(comment)";
 
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -17,19 +19,47 @@ public class FacilityReviewDAO {
             stmt.setInt(3, rating);
             stmt.setString(4, review);
 
-            boolean success = stmt.executeUpdate() > 0;
-
-            if (success) {
-                updateFacilityAverage(facilityId);
-            }
-
-            return success;
+            stmt.executeUpdate();
+            updateFacilityAverage(facilityId);
+            return true;
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
         return false;
+    }
+
+    public static FacilityReview getUserReview(int facilityId, int userId) {
+        String sql = "SELECT fr.*, u.username FROM facility_reviews fr " +
+                     "JOIN users u ON fr.user_id = u.id " +
+                     "WHERE fr.facility_id = ? AND fr.user_id = ?";
+
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, facilityId);
+            stmt.setInt(2, userId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    FacilityReview r = new FacilityReview();
+                    r.setId(rs.getInt("id"));
+                    r.setFacilityId(rs.getInt("facility_id"));
+                    r.setUserId(rs.getInt("user_id"));
+                    r.setRating(rs.getInt("rating"));
+                    r.setReview(rs.getString("comment"));
+                    r.setCreatedAt(rs.getString("created_at"));
+                    r.setUsername(rs.getString("username"));
+                    return r;
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     public static double getAverageRating(int facilityId) {
@@ -74,7 +104,7 @@ public class FacilityReviewDAO {
                     r.setFacilityId(rs.getInt("facility_id"));
                     r.setUserId(rs.getInt("user_id"));
                     r.setRating(rs.getInt("rating"));
-                    r.setReview(rs.getString("review"));
+                    r.setReview(rs.getString("comment"));
                     r.setCreatedAt(rs.getString("created_at"));
                     r.setUsername(rs.getString("username"));
 
