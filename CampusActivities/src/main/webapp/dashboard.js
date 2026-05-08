@@ -177,6 +177,7 @@ if (!user) {
     loadUpcomingEvents();
     loadStats();
     loadSuggestedMatches();
+    loadFacilitiesPreview();
 }
 
 function upcomingEventsUrl() {
@@ -304,6 +305,31 @@ function loadSuggestedMatches() {
             body.innerHTML = preview.map(buildSuggestedMatchRow).join("");
         })
         .catch(function () { /* leave default empty state */ });
+}
+
+function loadFacilitiesPreview() {
+    var body = document.getElementById("facilitiesCardBody");
+    if (!body) return;
+
+    var url = typeof campusFitUrl === "function" ? campusFitUrl("api/locations") : "api/locations";
+    fetch(url, { credentials: "same-origin" })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            if (!data || data.length === 0) return;
+            body.innerHTML = data.slice(0, 4).map(function (f) {
+                var rating = Number(f.averageRating || 0);
+                var stars = Math.round(rating);
+                var starStr = "★".repeat(stars) + "☆".repeat(5 - stars);
+                return '<div class="facility-row">' +
+                    '<div class="facility-left"><div>' +
+                    '<div class="row-title">' + escapeHtmlDash(f.name) + '</div>' +
+                    '<div class="facility-stars">' + starStr + '</div>' +
+                    '</div></div>' +
+                    '<span class="status-pill">Open</span>' +
+                    '</div>';
+            }).join("");
+        })
+        .catch(function () { /* leave default */ });
 }
 
 function buildSuggestedMatchRow(match) {
