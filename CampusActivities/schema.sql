@@ -13,13 +13,10 @@ USE campusactivities;
     firstName VARCHAR(50),
     lastName VARCHAR(50),
     avgRating DOUBLE DEFAULT 0,
-    preferredLocations TEXT,                                                                                            
-    penaltyTracked BOOLEAN DEFAULT false,
-    event_restriction_until DATETIME NULL DEFAULT NULL
     preferredLocations TEXT,
     penaltyTracked BOOLEAN DEFAULT false,
     security_question VARCHAR(255),
-    security_answer_hash VARCHAR(255)
+    security_answer_hash VARCHAR(255),
     event_restriction_until DATETIME NULL DEFAULT NULL
   );                
 
@@ -44,6 +41,17 @@ CREATE TABLE facilities (
     name VARCHAR(100) NOT NULL,
     description TEXT,
     rating DOUBLE DEFAULT 0
+);
+
+CREATE TABLE facility_reviews (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    facility_id INT NOT NULL,
+    user_id INT NOT NULL,
+    rating INT NOT NULL,
+    comment TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (facility_id) REFERENCES facilities(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE event_participants (
