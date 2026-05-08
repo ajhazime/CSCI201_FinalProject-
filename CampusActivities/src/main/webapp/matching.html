@@ -195,6 +195,41 @@
             text-decoration: none;
             font-weight: bold;
         }
+        /* ----- Invite modal ----- */
+        .invite-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .invite-box {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 28px;
+            width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+            color: #333;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+        .invite-title {
+            font-size: 17px;
+            font-weight: 700;
+            margin: 0 0 18px 0;
+            color: #222;
+        }
+        .invite-event-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .invite-event-info { font-size: 14px; color: #444; }
+        .invite-footer { margin-top: 18px; display: flex; justify-content: flex-end; }
     </style>
 </head>
 <body>
