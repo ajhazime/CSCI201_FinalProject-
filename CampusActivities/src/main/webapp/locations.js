@@ -17,8 +17,8 @@ const defaultFacilities = [
     },
     {
         id: 2,
-        name: "Village Gym",
-        displayName: "Village Gym",
+        name: "USC Village Fitness Center",
+        displayName: "Village Fitness Center",
         address: "USC Village, Los Angeles, CA 90089",
         shortAddress: "USC Village",
         hours: "Hours unavailable",
@@ -33,8 +33,8 @@ const defaultFacilities = [
     },
     {
         id: 3,
-        name: "Lyon Pool",
-        displayName: "Lyon Pool",
+        name: "Uytengsu Aquatics Center",
+        displayName: "Uytengsu Aquatics Center",
         address: "1026 W 34th St, Los Angeles, CA 90089",
         shortAddress: "Lyon Center",
         hours: "Hours unavailable",
@@ -49,13 +49,29 @@ const defaultFacilities = [
     },
     {
         id: 4,
-        name: "Galen Center",
-        displayName: "Galen Center",
-        address: "3400 S Figueroa St, Los Angeles, CA 90089",
-        shortAddress: "3400 S Figueroa St",
+        name: "HSC Fitness Center",
+        displayName: "HSC Fitness Center",
+        address: "1975 Zonal Ave, Los Angeles, CA 90033",
+        shortAddress: "Health Sciences Campus",
         hours: "Hours unavailable",
-        coords: [34.02132, -118.28092],
-        tags: ["Basketball", "Volleyball"],
+        coords: [34.04892, -118.27017],
+        tags: ["Cardio", "Weights"],
+        openSpots: null,
+        capacity: null,
+        occupancyPercent: null,
+        averageRating: 0,
+        reviewCount: 0,
+        reviews: []
+    },
+    {
+        id: 5,
+        name: "PED South Gym",
+        displayName: "PED South Gym",
+        address: "1150 W 37th St, Los Angeles, CA 90089",
+        shortAddress: "PED South",
+        hours: "Hours unavailable",
+        coords: [34.02024, -118.28560],
+        tags: ["Gym", "Courts"],
         openSpots: null,
         capacity: null,
         occupancyPercent: null,
@@ -323,12 +339,12 @@ function renderReviews(reviews) {
             <div class="review-item">
                 <div class="review-item-top">
                     <div>
-                        <div class="review-name">${escapeHtml(review.reviewerName || "Anonymous")}</div>
+                        <div class="review-name">${escapeHtml(review.username || "Anonymous")}</div>
                         <div class="star-text" style="font-size:18px;">${getStars(review.rating)}</div>
                     </div>
                     <div class="review-date">${escapeHtml(formatDate(review.createdAt))}</div>
                 </div>
-                <div class="review-text">${escapeHtml(review.reviewText || "No written review.")}</div>
+                <div class="review-text">${escapeHtml(review.review || "No written review.")}</div>
             </div>
         `;
     }).join("");
@@ -375,7 +391,7 @@ function bindReviewForm() {
         const formData = new URLSearchParams();
         formData.append("facilityId", facility.id);
         formData.append("rating", selectedRating);
-        formData.append("reviewText", text);
+        formData.append("review", text);
 
         try {
             const response = await fetch("api/locations", {
