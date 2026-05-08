@@ -7,7 +7,7 @@ import java.util.List;
 public class FacilityReviewDAO {
 
     public static boolean insertReview(int facilityId, int userId, int rating, String review) {
-        String sql = "INSERT INTO facility_reviews (facility_id, user_id, rating, review) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO facility_reviews (facility_id, user_id, rating, comment) VALUES (?, ?, ?, ?)";
 
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -74,7 +74,7 @@ public class FacilityReviewDAO {
                     r.setFacilityId(rs.getInt("facility_id"));
                     r.setUserId(rs.getInt("user_id"));
                     r.setRating(rs.getInt("rating"));
-                    r.setReview(rs.getString("review"));
+                    r.setReview(rs.getString("comment"));
                     r.setCreatedAt(rs.getString("created_at"));
                     r.setUsername(rs.getString("username"));
 
