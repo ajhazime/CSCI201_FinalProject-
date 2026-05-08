@@ -50,6 +50,7 @@ CREATE TABLE facility_reviews (
     rating INT NOT NULL,
     comment TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_user_facility (facility_id, user_id),
     FOREIGN KEY (facility_id) REFERENCES facilities(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );

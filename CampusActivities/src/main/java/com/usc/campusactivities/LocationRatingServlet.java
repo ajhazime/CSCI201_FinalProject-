@@ -21,6 +21,9 @@ public class LocationRatingServlet extends HttpServlet {
         JsonArray facilitiesArray = new JsonArray();
         String sql = "SELECT id, name, description, rating FROM facilities";
 
+        HttpSession session = request.getSession(false);
+        User user = session == null ? null : (User) session.getAttribute("user");
+
         try (Connection conn = DBUtil.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -34,6 +37,13 @@ public class LocationRatingServlet extends HttpServlet {
                 facilityJson.addProperty("averageRating", rs.getDouble("rating"));
                 facilityJson.addProperty("reviewCount", reviews.size());
                 facilityJson.add("reviews", gson.toJsonTree(reviews));
+
+                if (user != null) {
+                    FacilityReview userReview = FacilityReviewDAO.getUserReview(facilityId, user.getId());
+                    if (userReview != null) {
+                        facilityJson.add("userReview", gson.toJsonTree(userReview));
+                    }
+                }
 
                 facilitiesArray.add(facilityJson);
             }
@@ -76,7 +86,11 @@ public class LocationRatingServlet extends HttpServlet {
 
             boolean success = FacilityReviewDAO.insertReview(facilityId, user.getId(), rating, review);
             json.addProperty("success", success);
-            if (!success) {
+            if (success) {
+                FacilityReview saved = FacilityReviewDAO.getUserReview(facilityId, user.getId());
+                json.add("userReview", gson.toJsonTree(saved));
+                json.addProperty("averageRating", FacilityReviewDAO.getAverageRating(facilityId));
+            } else {
                 json.addProperty("message", "Could not submit review");
             }
 
