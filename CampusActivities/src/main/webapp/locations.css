@@ -686,3 +686,9 @@ a {
         align-items: flex-start;
     }
 }
+
+.review-login-prompt {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 16px;
+}
