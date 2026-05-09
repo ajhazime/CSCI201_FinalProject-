@@ -150,11 +150,14 @@ public class MatchingEngine {
      * Otherwise returns a value in the range 0–100.
      */
     public int scoreUser(User currentUser, User otherUser) {
-        int preferenceScore = comparePreferences(currentUser, otherUser);
-        if (preferenceScore == -1) return -1;
+        int prefA = comparePreferences(currentUser, otherUser);
+        if (prefA == -1) return -1;
+
+        int preferenceScore = (prefA + comparePreferences(otherUser, currentUser)) / 2;
+        int availabilityScore = (compareAvailability(currentUser, otherUser) + compareAvailability(otherUser, currentUser)) / 2;
 
         int total = preferenceScore
-                + compareAvailability(currentUser, otherUser)
+                + availabilityScore
                 + compareSkillLevel(currentUser, otherUser)
                 + compareLocation(currentUser, otherUser)
                 - getRatingDeduction(otherUser);
