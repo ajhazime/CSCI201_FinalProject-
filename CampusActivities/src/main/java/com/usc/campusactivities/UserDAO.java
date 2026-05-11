@@ -307,4 +307,22 @@ public class UserDAO {
         }
         return users;
     }
+
+    /**
+     * Reverts one no-show penalty when a host confirms attendance on appeal.
+     * When no penalty points remain, clears {@code event_restriction_until} so the
+     * active event lockout and penalty display both go away.
+     */
+    public static void revertNoShowPenaltyAfterAppeal(int userId) {
+        String sql = "UPDATE users SET penalties = GREATEST(penalties - 1, 0), "
+            + "event_restriction_until = IF(GREATEST(penalties - 1, 0) = 0, NULL, event_restriction_until) "
+            + "WHERE id = ?";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 }

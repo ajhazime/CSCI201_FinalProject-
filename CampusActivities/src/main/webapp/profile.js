@@ -207,6 +207,8 @@ if (isOwnProfile) {
             document.getElementById("editProfileBtn").style.display = "inline-block";
             prefillEditForm(data.user);
             loadRatingDisplay(data.user.id);
+            renderActivityHistory(data.activityHistory || []);
+            loadHostAppeals();
         })
         .catch(function() {
             if (sessionUser) { populateProfile(sessionUser); applyStatusPanel(sessionUser, true); }
@@ -214,6 +216,10 @@ if (isOwnProfile) {
 } else {
     const availCard = document.getElementById("availabilityCard");
     if (availCard) availCard.hidden = true;
+    const activityHistoryCard = document.getElementById("activityHistoryCard");
+    if (activityHistoryCard) activityHistoryCard.style.display = "none";
+    const hostAppealsCard = document.getElementById("hostAppealsCard");
+    if (hostAppealsCard) hostAppealsCard.style.display = "none";
     profileUserId = parseInt(viewingUserId, 10);
     fetch((typeof campusFitUrl === "function" ? campusFitUrl("api/users") : "/CampusActivities/api/users") + "?id=" + viewingUserId, {
         credentials: "same-origin"
@@ -718,4 +724,292 @@ function escapeHtml(value) {
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
+}
+
+var cachedActivityHistory = [];
+
+function appealsApiUrl(queryString) {
+    var base = typeof campusFitUrl === "function" ? campusFitUrl("api/appeals") : "/CampusActivities/api/appeals";
+    return queryString ? base + "?" + queryString : base;
+}
+
+function formatScheduleRange(dateStr, timeStr, endTimeStr) {
+    if (!dateStr) {
+        return "";
+    }
+    try {
+        var timePart = timeStr || "00:00:00";
+        var start = new Date(dateStr + "T" + timePart);
+        var startFormatted = start.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+        if (!endTimeStr) {
+            return startFormatted;
+        }
+        var endShort = String(endTimeStr).substring(0, 5);
+        return startFormatted + " – ends " + endShort;
+    } catch (e) {
+        return dateStr + " " + (timeStr || "");
+    }
+}
+
+function renderActivityHistory(items) {
+    cachedActivityHistory = items || [];
+    var listEl = document.getElementById("activityHistoryList");
+    var card = document.getElementById("activityHistoryCard");
+    if (!listEl || !card) {
+        return;
+    }
+    card.style.display = "block";
+    if (!cachedActivityHistory.length) {
+        listEl.innerHTML = '<p class="empty-text">No events yet.</p>';
+        return;
+    }
+    listEl.innerHTML = cachedActivityHistory.map(function (row) {
+        var isHost = row.role && String(row.role).toUpperCase() === "HOST";
+        var attLabel = "";
+        var attPillClass = "pill-present";
+        if (isHost) {
+            attLabel = "Host";
+            attPillClass = "pill-host";
+        } else if (!row.eventEnded) {
+            attLabel = "Upcoming";
+            attPillClass = "pill-participant";
+        } else if (row.present === true) {
+            attLabel = "Present";
+            attPillClass = "pill-present";
+        } else if (row.present === false) {
+            attLabel = "Absent";
+            attPillClass = "pill-absent";
+        } else {
+            attLabel = "Not marked";
+            attPillClass = "pill-pending";
+        }
+        var appealPill = "";
+        if (row.appealStatus) {
+            var st = String(row.appealStatus).toUpperCase();
+            if (st === "PENDING") {
+                appealPill = '<span class="pill pill-pending">Appeal pending</span>';
+            } else if (st === "DENIED") {
+                appealPill = '<span class="pill pill-denied">Appeal denied</span>';
+            } else if (st === "GRANTED") {
+                appealPill = '<span class="pill pill-granted">Appeal granted</span>';
+            }
+        }
+        var rolePill = isHost
+            ? '<span class="pill pill-host">Host</span>'
+            : '<span class="pill pill-participant">Joined</span>';
+        var appealBtn = row.canAppeal
+            ? '<button type="button" class="btn-appeal" onclick="openAppealPage(' + row.eventId + ')">Appeal penalty</button>'
+            : "";
+        return (
+            '<div class="activity-row">' +
+                '<div class="activity-row-main">' +
+                    '<p class="activity-row-title">' + escapeHtml(row.activityType || "Event") + "</p>" +
+                    '<p class="activity-row-meta">' +
+                        escapeHtml(row.location || "") +
+                        "<br>" +
+                        escapeHtml(formatScheduleRange(row.date, row.time, row.endTime)) +
+                    "</p>" +
+                    '<div class="activity-badges" style="margin-top:8px;">' +
+                        rolePill +
+                        '<span class="pill ' +
+                        attPillClass +
+                        '">' +
+                        escapeHtml(attLabel) +
+                        "</span>" +
+                        appealPill +
+                    "</div></div>" +
+                    "<div>" +
+                    appealBtn +
+                    "</div></div>"
+        );
+    }).join("");
+}
+
+function openAppealPage(eventId) {
+    var row = cachedActivityHistory.find(function (r) {
+        return r.eventId === eventId;
+    });
+    try {
+        if (row) {
+            sessionStorage.setItem("appealEventMeta", JSON.stringify(row));
+        }
+    } catch (e) {
+        /* ignore */
+    }
+    var url =
+        typeof campusFitUrl === "function"
+            ? campusFitUrl("appeal.html?eventId=" + eventId)
+            : "/CampusActivities/appeal.html?eventId=" + eventId;
+    window.location.href = url;
+}
+
+function loadHostAppeals() {
+    fetch(appealsApiUrl("forHost=true"), { credentials: "same-origin" })
+        .then(function (res) {
+            return res.json();
+        })
+        .then(function (data) {
+            if (!data || !data.success) {
+                return;
+            }
+            renderHostAppeals(data.appeals || []);
+        })
+        .catch(function () {});
+}
+
+var pendingAppealReviewId = null;
+
+function renderHostAppeals(appeals) {
+    var card = document.getElementById("hostAppealsCard");
+    var listEl = document.getElementById("hostAppealsList");
+    var emptyEl = document.getElementById("hostAppealsEmpty");
+    if (!card || !listEl) {
+        return;
+    }
+    card.style.display = "block";
+    if (!appeals.length) {
+        listEl.innerHTML = "";
+        if (emptyEl) {
+            emptyEl.style.display = "block";
+        }
+        return;
+    }
+    if (emptyEl) {
+        emptyEl.style.display = "none";
+    }
+    listEl.innerHTML = appeals
+        .map(function (a) {
+            var sub =
+                escapeHtml(a.activityType || "") +
+                " · " +
+                escapeHtml(a.location || "") +
+                " · " +
+                escapeHtml(formatScheduleRange(a.date, a.time, null));
+            return (
+                '<div class="appeal-review-row">' +
+                    "<div><strong>" +
+                    escapeHtml(a.appellantUsername || "User") +
+                    "</strong>" +
+                    '<p style="margin:4px 0 0;font-size:13px;color:#666;">' +
+                    sub +
+                    "</p></div>" +
+                    '<button type="button" class="btn-review-appeal" data-appeal-id="' +
+                    a.id +
+                    '">Review</button></div>'
+            );
+        })
+        .join("");
+    listEl.querySelectorAll(".btn-review-appeal").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            var id = parseInt(btn.getAttribute("data-appeal-id"), 10);
+            var rec = appeals.find(function (x) {
+                return x.id === id;
+            });
+            openAppealReviewModal(rec);
+        });
+    });
+}
+
+function openAppealReviewModal(a) {
+    if (!a) {
+        return;
+    }
+    pendingAppealReviewId = a.id;
+    document.getElementById("appealReviewSub").textContent =
+        (a.appellantUsername || "User") +
+        " · " +
+        (a.activityType || "") +
+        " (" +
+        formatScheduleRange(a.date, a.time, null) +
+        ")";
+    document.getElementById("appealReviewMessage").textContent = a.message || "";
+    var msgEl = document.getElementById("appealReviewMsg");
+    msgEl.textContent = "";
+    msgEl.className = "edit-msg";
+    msgEl.style.display = "none";
+    document.getElementById("appealReviewModal").hidden = false;
+}
+
+function closeAppealReviewModal() {
+    pendingAppealReviewId = null;
+    document.getElementById("appealReviewModal").hidden = true;
+}
+
+function submitAppealReview(decision) {
+    if (!pendingAppealReviewId) {
+        return;
+    }
+    var msgEl = document.getElementById("appealReviewMsg");
+    var params = new URLSearchParams({
+        appealId: String(pendingAppealReviewId),
+        decision: decision
+    });
+    var reviewUrl =
+        typeof campusFitUrl === "function"
+            ? campusFitUrl("api/appeals/review")
+            : "/CampusActivities/api/appeals/review";
+    fetch(reviewUrl, {
+        method: "POST",
+        body: params,
+        credentials: "same-origin"
+    })
+        .then(function (res) {
+            return res.json();
+        })
+        .then(function (data) {
+            if (data.success) {
+                closeAppealReviewModal();
+                loadHostAppeals();
+                refreshOwnProfileFromServer();
+                fetch(
+                    typeof campusFitUrl === "function"
+                        ? campusFitUrl("api/profile")
+                        : "/CampusActivities/api/profile",
+                    { credentials: "same-origin" }
+                )
+                    .then(function (r) {
+                        return r.json();
+                    })
+                    .then(function (d) {
+                        if (d && d.success && d.activityHistory) {
+                            renderActivityHistory(d.activityHistory);
+                        }
+                    })
+                    .catch(function () {});
+            } else {
+                msgEl.textContent = data.message || "Could not save.";
+                msgEl.className = "edit-msg error";
+                msgEl.style.display = "block";
+            }
+        })
+        .catch(function () {
+            msgEl.textContent = "Connection error.";
+            msgEl.className = "edit-msg error";
+            msgEl.style.display = "block";
+        });
+}
+
+var appealModalCancel = document.getElementById("appealModalCancel");
+if (appealModalCancel) {
+    appealModalCancel.addEventListener("click", closeAppealReviewModal);
+}
+var appealBtnPresent = document.getElementById("appealBtnPresent");
+if (appealBtnPresent) {
+    appealBtnPresent.addEventListener("click", function () {
+        submitAppealReview("present");
+    });
+}
+var appealBtnAbsent = document.getElementById("appealBtnAbsent");
+if (appealBtnAbsent) {
+    appealBtnAbsent.addEventListener("click", function () {
+        submitAppealReview("absent");
+    });
+}
+var appealReviewModal = document.getElementById("appealReviewModal");
+if (appealReviewModal) {
+    appealReviewModal.addEventListener("click", function (e) {
+        if (e.target.id === "appealReviewModal") {
+            closeAppealReviewModal();
+        }
+    });
 }
