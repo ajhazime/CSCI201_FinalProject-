@@ -3,6 +3,7 @@ package com.usc.campusactivities;
 import javax.servlet.*;
 import javax.servlet.http.*;
 import java.io.*;
+import java.util.List;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
@@ -24,6 +25,8 @@ public class ProfileServlet extends HttpServlet {
             return;
         }
 
+        EventDAO.finalizeAttendanceForEndedEvents();
+
         User user = UserDAO.getUserById(sessionUser.getId());
         if (user == null) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -42,6 +45,8 @@ public class ProfileServlet extends HttpServlet {
         jsonResponse.add("user", userObj);
         jsonResponse.addProperty("eventsJoined", eventsJoined);
         jsonResponse.addProperty("ratingCount", ratingCount);
+        List<ProfileActivityItem> activityHistory = EventDAO.getProfileActivityHistory(user.getId());
+        jsonResponse.add("activityHistory", new Gson().toJsonTree(activityHistory));
         response.getWriter().write(jsonResponse.toString());
     }
 

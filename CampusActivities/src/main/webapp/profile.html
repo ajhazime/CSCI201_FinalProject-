@@ -56,6 +56,62 @@
         .rate-msg { margin-top: 8px; font-size: 13px; display: none; }
         .rate-msg.success { color: #2f6b40; display: block; }
         .rate-msg.error { color: #992233; display: block; }
+
+        .profile-span-2 { grid-column: 1 / -1; }
+        .activity-history-list { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+        .activity-row {
+            border: 1px solid #e7e2dd; border-radius: 8px; padding: 14px 16px;
+            background: #fafafa; display: flex; flex-wrap: wrap; gap: 10px 16px;
+            align-items: flex-start; justify-content: space-between;
+        }
+        .activity-row-main { flex: 1; min-width: 200px; }
+        .activity-row-title { font-weight: bold; font-size: 15px; color: #242424; margin: 0 0 4px 0; }
+        .activity-row-meta { font-size: 13px; color: #555; margin: 0; line-height: 1.45; }
+        .activity-badges { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+        .pill { font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em; }
+        .pill-host { background: #eee; color: #444; }
+        .pill-participant { background: #e8f0fe; color: #1a56b5; }
+        .pill-present { background: #e8f5ea; color: #2f6b40; }
+        .pill-absent { background: #fde8e8; color: #992233; }
+        .pill-pending { background: #fff8e6; color: #8a6d00; }
+        .pill-denied { background: #f0f0f0; color: #666; }
+        .pill-granted { background: #e8f5ea; color: #2f6b40; }
+        .btn-appeal {
+            background: #992233; color: white; border: none; padding: 8px 14px; border-radius: 6px;
+            font-size: 13px; font-weight: bold; cursor: pointer;
+        }
+        .btn-appeal:hover { opacity: 0.92; }
+        .appeal-review-row {
+            border: 1px solid #e7e2dd; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px;
+            display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center;
+            background: #fff;
+        }
+        .btn-review-appeal {
+            background: none; border: 1px solid #992233; color: #992233;
+            padding: 7px 14px; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer;
+        }
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 500;
+            display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-overlay[hidden] { display: none !important; }
+        .modal-dialog {
+            background: white; border-radius: 10px; max-width: 480px; width: 100%;
+            padding: 22px 24px; box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+        }
+        .modal-dialog h4 { margin: 0 0 12px 0; font-size: 17px; }
+        .modal-dialog .appeal-msg-box {
+            background: #f7f7f7; border-radius: 8px; padding: 12px 14px; font-size: 14px;
+            color: #333; margin-bottom: 16px; white-space: pre-wrap;
+        }
+        .modal-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+        .modal-actions button {
+            flex: 1; min-width: 120px; padding: 10px 14px; border-radius: 6px; font-weight: bold;
+            cursor: pointer; font-size: 14px; border: none;
+        }
+        .btn-was-there { background: #2f6b40; color: white; }
+        .btn-not-there { background: #eee; color: #333; }
+        .btn-modal-cancel { background: transparent; border: 1px solid #ccc !important; color: #555; flex: none; }
     </style>
 </head>
 <body>
@@ -273,6 +329,19 @@
                     </div>
                 </div>
 
+                <div class="profile-card profile-span-2" id="activityHistoryCard" style="display:none;">
+                    <h3>Activity history</h3>
+                    <p class="avail-subtitle">Events you hosted or joined. If you were marked absent after an event ended, you can ask the host to review attendance.</p>
+                    <div id="activityHistoryList" class="activity-history-list"></div>
+                </div>
+
+                <div class="profile-card profile-span-2" id="hostAppealsCard" style="display:none;">
+                    <h3>Attendance appeals</h3>
+                    <p class="avail-subtitle">Participants are asking you to review a mistaken absence. Open a request to confirm whether they attended.</p>
+                    <div id="hostAppealsList"></div>
+                    <p id="hostAppealsEmpty" class="empty-text" style="margin-top:8px;">No pending appeals.</p>
+                </div>
+
                 <div class="profile-card avail-card" id="availabilityCard">
                     <h3>Weekly Availability</h3>
                     <p class="avail-subtitle">Set when you're free to meet up. Users with overlapping availability rank higher in your matches.</p>
@@ -284,6 +353,20 @@
                 </div>
             </section>
         </main>
+    </div>
+
+    <div id="appealReviewModal" class="modal-overlay" hidden>
+        <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="appealReviewTitle">
+            <h4 id="appealReviewTitle">Review attendance appeal</h4>
+            <p id="appealReviewSub" style="font-size:13px;color:#666;margin:0 0 10px 0;"></p>
+            <div class="appeal-msg-box" id="appealReviewMessage"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn-was-there" id="appealBtnPresent">Was there</button>
+                <button type="button" class="btn-not-there" id="appealBtnAbsent">Was not there</button>
+                <button type="button" class="btn-modal-cancel" id="appealModalCancel">Cancel</button>
+            </div>
+            <div class="edit-msg" id="appealReviewMsg" style="margin-top:12px;"></div>
+        </div>
     </div>
 
     <script src="app-context.js"></script>
