@@ -2,6 +2,17 @@ const user = JSON.parse(sessionStorage.getItem("user"));
 
 let dashboardPenaltyInterval = null;
 
+// Seed ratings - mirrors the seed values in locations.js so the dashboard
+// shows the same blended rating as the Facilities page. Keyed by facility name.
+const FACILITY_SEED_RATINGS = {
+    "Lyon Center": { rating: 4.8, count: 10 },
+    "USC Village Fitness Center": { rating: 4.3, count: 10 },
+    "Village Fitness Center": { rating: 4.3, count: 10 },
+    "Uytengsu Aquatics Center": { rating: 4.5, count: 10 },
+    "HSC Fitness Center": { rating: 4.0, count: 10 },
+    "PED South Gym": { rating: 3.7, count: 10 }
+};
+
 function meApiUrl() {
     return typeof campusFitUrl === "function" ? campusFitUrl("api/users?me=true") : "api/users?me=true";
 }
@@ -307,6 +318,23 @@ function loadSuggestedMatches() {
         .catch(function () { /* leave default empty state */ });
 }
 
+/**
+ * Compute the blended (seed + real reviews) rating for a facility,
+ * using the same math as locations.js's recomputeFacilityRating().
+ */
+function getBlendedFacilityRating(facility) {
+    var seed = FACILITY_SEED_RATINGS[facility.name] || { rating: 0, count: 0 };
+    var realAvg = Number(facility.averageRating || 0);
+    var realCount = Number(facility.reviewCount || 0);
+
+    var totalWeight = seed.count + realCount;
+    if (totalWeight === 0) {
+        return seed.rating;
+    }
+
+    return (seed.rating * seed.count + realAvg * realCount) / totalWeight;
+}
+
 function loadFacilitiesPreview() {
     var body = document.getElementById("facilitiesCardBody");
     if (!body) return;
@@ -317,13 +345,14 @@ function loadFacilitiesPreview() {
         .then(function (data) {
             if (!data || data.length === 0) return;
             body.innerHTML = data.slice(0, 4).map(function (f) {
-                var rating = Number(f.averageRating || 0);
+                var rating = getBlendedFacilityRating(f);
                 var stars = Math.round(rating);
                 var starStr = "★".repeat(stars) + "☆".repeat(5 - stars);
                 return '<div class="facility-row">' +
                     '<div class="facility-left"><div>' +
                     '<div class="row-title">' + escapeHtmlDash(f.name) + '</div>' +
-                    '<div class="facility-stars">' + starStr + '</div>' +
+                    '<div class="facility-stars">' + starStr +
+                    ' <span style="color:#666;font-size:12px;margin-left:4px">' + rating.toFixed(1) + '</span></div>' +
                     '</div></div>' +
                     '<span class="status-pill">Open</span>' +
                     '</div>';
