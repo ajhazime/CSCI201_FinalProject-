@@ -383,6 +383,12 @@ a {
     letter-spacing: 0.04em;
 }
 
+/* Full-width cards below the grid */
+
+.profile-span-2 {
+    margin-top: 22px;
+}
+
 /* AVAILABILITY */
 
 .avail-card {
