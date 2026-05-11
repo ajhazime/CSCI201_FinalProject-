@@ -1,0 +1,176 @@
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee
+         https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
+
+  <display-name>Campus Activities</display-name>
+
+  <servlet>
+    <servlet-name>LoginServlet</servlet-name>
+    <servlet-class>com.usc.campusactivities.LoginServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>LoginServlet</servlet-name>
+    <url-pattern>/login</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>RegisterServlet</servlet-name>
+    <servlet-class>com.usc.campusactivities.RegisterServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>RegisterServlet</servlet-name>
+    <url-pattern>/register</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>EventServlet</servlet-name>
+    <servlet-class>com.usc.campusactivities.EventServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>EventServlet</servlet-name>
+    <url-pattern>/createEvent</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>EventServlet</servlet-name>
+    <url-pattern>/events</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>EventServlet</servlet-name>
+    <url-pattern>/joinEvent</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>EventServlet</servlet-name>
+    <url-pattern>/leaveEvent</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>EventServlet</servlet-name>
+    <url-pattern>/cancelEvent</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>EventServlet</servlet-name>
+    <url-pattern>/myEvents</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>EventServlet</servlet-name>
+    <url-pattern>/sendInvite</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>EventServlet</servlet-name>
+    <url-pattern>/myInvites</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>EventServlet</servlet-name>
+    <url-pattern>/upcomingEvents</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>EventServlet</servlet-name>
+    <url-pattern>/respondInvite</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>EventServlet</servlet-name>
+    <url-pattern>/eventAttendance</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>EventServlet</servlet-name>
+    <url-pattern>/markAttendance</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>LogoutServlet</servlet-name>
+    <servlet-class>com.usc.campusactivities.LogoutServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>LogoutServlet</servlet-name>
+    <url-pattern>/logout</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>MatchServlet</servlet-name>
+    <servlet-class>com.usc.campusactivities.MatchServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>MatchServlet</servlet-name>
+    <url-pattern>/api/matches</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>UserServlet</servlet-name>
+    <servlet-class>com.usc.campusactivities.UserServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>UserServlet</servlet-name>
+    <url-pattern>/api/users</url-pattern>
+  </servlet-mapping>
+  
+  <servlet>
+    <servlet-name>LocationRatingServlet</servlet-name>
+    <servlet-class>com.usc.campusactivities.LocationRatingServlet</servlet-class>
+  </servlet>
+
+<servlet-mapping>
+    <servlet-name>LocationRatingServlet</servlet-name>
+    <url-pattern>/api/locations</url-pattern>
+</servlet-mapping>
+
+
+  <servlet>
+    <servlet-name>StatsServlet</servlet-name>
+    <servlet-class>com.usc.campusactivities.StatsServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>StatsServlet</servlet-name>
+    <url-pattern>/api/stats</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>AvailabilityServlet</servlet-name>
+    <servlet-class>com.usc.campusactivities.AvailabilityServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>AvailabilityServlet</servlet-name>
+    <url-pattern>/availability</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>RecoveryServlet</servlet-name>
+    <servlet-class>com.usc.campusactivities.RecoveryServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>RecoveryServlet</servlet-name>
+    <url-pattern>/api/recovery</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>ProfileServlet</servlet-name>
+    <servlet-class>com.usc.campusactivities.ProfileServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ProfileServlet</servlet-name>
+    <url-pattern>/api/profile</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>RatingServlet</servlet-name>
+    <servlet-class>com.usc.campusactivities.RatingServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>RatingServlet</servlet-name>
+    <url-pattern>/api/ratings</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>AppealServlet</servlet-name>
+    <servlet-class>com.usc.campusactivities.AppealServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>AppealServlet</servlet-name>
+    <url-pattern>/api/appeals</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>AppealServlet</servlet-name>
+    <url-pattern>/api/appeals/review</url-pattern>
+  </servlet-mapping>
+
+</web-app>

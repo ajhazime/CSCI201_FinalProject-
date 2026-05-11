@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USC FIT - My Matches</title>
+    <link rel="stylesheet" href="matching.css">
+</head>
+<body>
+    <div class="matching-wrapper">
+        <aside class="matching-sidebar">
+            <div>
+                <div class="sidebar-brand">
+                    <h1>USC FIT</h1>
+                    <p>CAMPUS FITNESS</p>
+                </div>
+
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar" id="sidebarInitials">U</div>
+                    <div>
+                        <div class="sidebar-user-name" id="sidebarUsername">User</div>
+                        <a href="logout" id="logoutLink" style="font-size:12px;color:#992233;font-weight:bold;text-decoration:none;">Sign out</a>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">MAIN</div>
+                <a href="dashboard.html" class="sidebar-link" id="dashboardLink">Dashboard</a>
+                <a href="activities.html" class="sidebar-link">Events</a>
+                <a href="matching.html" class="sidebar-link active" id="matchesLink">My Matches</a>
+
+                <div class="sidebar-section">EXPLORE</div>
+                <a href="locations.html" class="sidebar-link">Facilities</a>
+
+                <div class="sidebar-section">ACCOUNT</div>
+                <a href="profile.html" class="sidebar-link" id="profileLink">Profile</a>
+            </div>
+        </aside>
+
+        <div class="matching-content">
+            <header class="matching-header">
+                <div>
+                    <h1>My Matches</h1>
+                    <p>Trojans who fit your schedule and skill level</p>
+                </div>
+            </header>
+
+            <div class="matching-body">
+                <div id="status">Loading matches...</div>
+                <div id="results"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app-context.js"></script>
+    <script src="logout.js"></script>
+    <script src="matching.js"></script>
+</body>
+</html>

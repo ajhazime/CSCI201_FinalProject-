@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USC FIT Activities</title>
+    <link rel="stylesheet" href="activities.css">
+</head>
+<body>
+    <div class="activities-wrapper">
+        <aside class="activities-sidebar">
+            <div>
+                <div class="sidebar-brand">
+                    <h1>USC FIT</h1>
+                    <p>CAMPUS FITNESS</p>
+                </div>
+
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar" id="sidebarInitials">U</div>
+                    <div>
+                        <div class="sidebar-user-name" id="sidebarUsername">User</div>
+                        <a href="logout" id="logoutLink" style="font-size:12px;color:#992233;font-weight:bold;text-decoration:none;">Sign out</a>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">MAIN</div>
+                <a href="dashboard.html" class="sidebar-link" id="dashboardLink">Dashboard</a>
+                <a href="activities.html" class="sidebar-link active">Events</a>
+                <a href="matching.html" class="sidebar-link" id="matchesLink">My Matches</a>
+
+                <div class="sidebar-section">EXPLORE</div>
+                <a href="locations.html" class="sidebar-link">Facilities</a>
+
+                <div class="sidebar-section">ACCOUNT</div>
+                <a href="profile.html" class="sidebar-link" id="profileLink">Profile</a>
+            </div>
+        </aside>
+
+        <main class="activities-content">
+            <!-- Guest banner — shown when not logged in -->
+            <div id="guestBanner" style="display:none;background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:12px 18px;margin-bottom:16px;font-size:14px;color:#555;">
+                You are browsing as a guest. <a href="login.html" style="color:#992233;font-weight:bold;">Sign in</a> or <a href="register.html" style="color:#992233;font-weight:bold;">create an account</a> to join events and access all features.
+            </div>
+
+            <header class="activities-header">
+                <div>
+                    <h1>Activities</h1>
+                    <p>Browse available campus activities and events.</p>
+                </div>
+
+                <div class="header-actions">
+                    <a id="dashboardLink" href="dashboard.html" class="header-button">Back to dashboard</a>
+                    <a id="createEventLink" href="createEvent.html" class="header-button primary">+ Create event</a>
+                </div>
+            </header>
+
+            <section class="activities-main">
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <div class="summary-label">Available Events</div>
+                        <div class="summary-value" id="eventCount">0</div>
+                    </div>
+
+                    <div class="summary-card">
+                        <div class="summary-label">Open Spots</div>
+                        <div class="summary-value" id="openSpotCount">0</div>
+                    </div>
+
+                    <div class="summary-card">
+                        <div class="summary-label">Locations</div>
+                        <div class="summary-value" id="locationCount">0</div>
+                    </div>
+                </div>
+
+                <div class="events-card">
+                    <div class="events-card-header">
+                        <div>
+                            <h2>Campus Activities</h2>
+                            <p>Browse events, see status, and join open activities you are not hosting.</p>
+                        </div>
+                    </div>
+
+                    <div class="calendar-card">
+                        <div class="calendar-header">
+                            <div class="calendar-left">
+                                <button id="calPrev" class="cal-nav" type="button">‹</button>
+                                <strong id="calTitle">Month YYYY</strong>
+                                <button id="calNext" class="cal-nav" type="button">›</button>
+                            </div>
+                            <div class="calendar-right">
+                                <button id="calToday" class="cal-action" type="button">Today</button>
+                                <button id="calAll" class="cal-action primary" type="button">All events</button>
+                            </div>
+                        </div>
+                        <div id="calGrid" class="cal-grid"></div>
+                        <div class="cal-hint" id="calHint">Click a day to filter the table below.</div>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table class="events-table">
+                            <thead>
+                                <tr>
+                                    <th>Activity</th>
+                                    <th>Location</th>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Status</th>
+                                    <th>Spots</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="eventsBody">
+                                <tr>
+                                    <td colspan="7" class="loading-cell">Loading activities...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="attendanceOverlay" class="modal-overlay" aria-hidden="true">
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="attendanceModalTitle">
+            <h3 id="attendanceModalTitle">Take attendance</h3>
+            <p class="modal-sub">Check off who is present while the event is in progress. Anyone not marked present when the event ends may receive a 12-hour event penalty.</p>
+            <div id="attendanceList" class="attendance-list"></div>
+            <p id="attendanceError" class="modal-error" role="alert"></p>
+            <div class="modal-actions">
+                <button type="button" class="modal-btn" id="attendanceCancel">Cancel</button>
+                <button type="button" class="modal-btn primary" id="attendanceSave">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Guest restricted-feature modal -->
+    <div id="guestModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.45);z-index:1000;justify-content:center;align-items:center;">
+        <div style="background:white;border-radius:14px;padding:36px 32px;max-width:360px;width:90%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,0.25);">
+            <div style="font-size:32px;margin-bottom:12px;">🔒</div>
+            <h3 style="margin:0 0 10px;font-size:18px;color:#222;">Members only</h3>
+            <p style="color:#666;font-size:14px;margin:0 0 24px;line-height:1.5;">This feature is only available to registered users. Join for free to access your dashboard, matches, and more.</p>
+            <div style="display:flex;gap:10px;justify-content:center;">
+                <a href="login.html" style="background:#992233;color:white;padding:10px 22px;border-radius:8px;font-weight:bold;text-decoration:none;font-size:14px;">Log in</a>
+                <a href="register.html" style="background:#f5f5f5;color:#333;padding:10px 22px;border-radius:8px;font-weight:bold;text-decoration:none;font-size:14px;border:1px solid #999;">Sign up</a>
+            </div>
+            <button onclick="document.getElementById('guestModal').style.display='none'" style="margin-top:16px;background:none;border:none;color:#555;font-size:13px;cursor:pointer;">Maybe later</button>
+        </div>
+    </div>
+
+    <script src="app-context.js"></script>
+    <script src="logout.js"></script>
+    <script src="activities.js"></script>
+</body>
+</html>

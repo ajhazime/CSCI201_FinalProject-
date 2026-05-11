@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USC FIT - Facilities</title>
+
+    <link rel="stylesheet" href="locations.css">
+
+    <!-- Leaflet map -->
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin=""
+    />
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""
+    ></script>
+</head>
+<body>
+    <div class="app-shell">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div>
+                <div class="brand">
+                    <h1>USC FIT</h1>
+                    <p>CAMPUS FITNESS</p>
+                </div>
+
+                <div class="profile-card">
+                    <div class="profile-avatar" id="profileInitials">GF</div>
+                    <div>
+                        <div class="profile-name" id="sidebarName">Guest User</div>
+                        <a href="logout" id="logoutLink" style="font-size:12px;color:#992233;font-weight:bold;text-decoration:none;">Sign out</a>
+                    </div>
+                </div>
+
+                <div class="sidebar-section-title">MAIN</div>
+                <nav class="sidebar-nav">
+                    <a href="dashboard.html" class="sidebar-link" id="dashboardLink">Dashboard</a>
+                    <a href="activities.html" class="sidebar-link">Events</a>
+                    <a href="matching.html" class="sidebar-link" id="matchesLink">My Matches</a>
+
+                    <div class="sidebar-section-title secondary">EXPLORE</div>
+                    <a href="locations.html" class="sidebar-link active">Facilities</a>
+
+                    <div class="sidebar-section-title secondary">ACCOUNT</div>
+                    <a href="profile.html" class="sidebar-link" id="profileLink">Profile</a>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div>
+                    <h2>Facilities</h2>
+                    <p>USC campus athletic locations</p>
+                </div>
+
+                <div class="top-actions">
+                    <a href="locations.html" class="light-button">Browse facilities</a>
+                    <a href="createEvent.html" class="primary-button">+ Create event</a>
+                </div>
+            </header>
+
+            <div id="messageBox" class="message-box"></div>
+
+            <section class="top-grid">
+                <div class="map-card">
+                    <div id="map"></div>
+
+                    <div class="map-legend">
+                        <div><span class="legend-dot selected-dot"></span> Selected</div>
+                        <div><span class="legend-dot facility-dot"></span> Facility</div>
+                    </div>
+                </div>
+
+                <div class="facility-list-card">
+                    <div id="facilityList" class="facility-list">
+                        <div class="loading-card">Loading facilities...</div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="detailPanel" class="detail-panel">
+                <div class="loading-card">Loading facility details...</div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Guest restricted-feature modal -->
+    <div id="guestModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.45);z-index:9999;justify-content:center;align-items:center;">
+        <div style="background:white;border-radius:14px;padding:36px 32px;max-width:360px;width:90%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,0.25);">
+            <div style="font-size:32px;margin-bottom:12px;">🔒</div>
+            <h3 style="margin:0 0 10px;font-size:18px;color:#222;">Members only</h3>
+            <p style="color:#666;font-size:14px;margin:0 0 24px;line-height:1.5;">This feature is only available to registered users. Join for free to access your dashboard, matches, and more.</p>
+            <div style="display:flex;gap:10px;justify-content:center;">
+                <a href="login.html" style="background:#992233;color:white;padding:10px 22px;border-radius:8px;font-weight:bold;text-decoration:none;font-size:14px;">Log in</a>
+                <a href="register.html" style="background:#f5f5f5;color:#333;padding:10px 22px;border-radius:8px;font-weight:bold;text-decoration:none;font-size:14px;border:1px solid #999;">Sign up</a>
+            </div>
+            <button onclick="document.getElementById('guestModal').style.display='none'" style="margin-top:16px;background:none;border:none;color:#555;font-size:13px;cursor:pointer;">Maybe later</button>
+        </div>
+    </div>
+
+    <script src="app-context.js"></script>
+    <script src="logout.js"></script>
+    <script src="locations.js"></script>
+</body>
+</html>
