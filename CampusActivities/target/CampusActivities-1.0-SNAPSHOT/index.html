@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to USC FIT</title>
+    <style>
+        :root {
+            --usc-cardinal: #992233;
+            --usc-gold: #FFCC00;
+            --bg-dark: #121212;
+            --card-white: #ffffff;
+            --usc-gold-light: #fffbeb; /* For the guest banner */
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: var(--bg-dark);
+            background-image: repeating-linear-gradient(45deg, #1a1a1a 0px, #1a1a1a 2px, transparent 2px, transparent 10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: var(--usc-gold);
+            font-size: 32px;
+            letter-spacing: 3px;
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        .header p {
+            font-size: 11px;
+            color: #888;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-top: 8px;
+        }
+
+        .main-card {
+            background: var(--card-white);
+            border-radius: 16px;
+            overflow: hidden; /* Keeps the guest banner corners rounded */
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .welcome-text {
+            color: #333;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .description {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        /* Button Styling */
+        .btn {
+            display: block;
+            text-decoration: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 12px;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background-color: var(--usc-cardinal);
+            color: white;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: var(--usc-cardinal);
+            border: 2px solid var(--usc-cardinal);
+        }
+
+        /* Guest Banner Styling */
+        .guest-banner {
+            background-color: var(--usc-gold-light);
+            padding: 15px;
+            border-top: 1px solid #f0e6cc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .guest-text {
+            color: #856404;
+            font-size: 12px;
+            text-align: left;
+        }
+
+        .btn-guest {
+            background-color: var(--usc-gold);
+            color: #333;
+            padding: 6px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .btn-guest:hover {
+            background-color: #e6b800;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>USC FIT</h1>
+            <p>Campus Fitness Platform</p>
+        </div>
+
+        <div class="main-card">
+            <div class="content">
+                <div class="welcome-text">Get Started</div>
+                <p class="description">Join your fellow Trojans. Track your workouts, join campus events, and stay active.</p>
+                
+                <a href="login.html" class="btn btn-primary">Sign In</a>
+                <a href="register.html" class="btn btn-outline">Create Account</a>
+            </div>
+
+            <div class="guest-banner">
+                <div class="guest-text">
+                    <strong>Guest access:</strong><br>
+                    browse only — no event signup
+                </div>
+                <a href="activities.html" class="btn-guest">Try as guest</a>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

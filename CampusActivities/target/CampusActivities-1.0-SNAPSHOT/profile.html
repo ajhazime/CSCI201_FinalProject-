@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>USC FIT Profile</title>
+    <link rel="stylesheet" href="profile.css">
+</head>
+<body>
+    <div class="profile-wrapper">
+        <aside class="profile-sidebar">
+            <div>
+                <div class="sidebar-brand">
+                    <h1>USC FIT</h1>
+                    <p>CAMPUS FITNESS</p>
+                </div>
+
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar" id="sidebarInitials">U</div>
+                    <div>
+                        <div class="sidebar-user-name" id="sidebarUsername">User</div>
+                        <div class="sidebar-user-level">Student</div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">MAIN</div>
+                <a href="dashboard.html" class="sidebar-link">Dashboard</a>
+                <a href="activities.html" class="sidebar-link">Events</a>
+                <a href="matching.html" class="sidebar-link">My Matches</a>
+
+                <div class="sidebar-section">EXPLORE</div>
+                <a href="locations.html" class="sidebar-link">Facilities</a>
+
+                <div class="sidebar-section">ACCOUNT</div>
+                <a href="profile.html" class="sidebar-link active">Profile</a>
+            </div>
+
+            <a href="#" id="logoutLink" class="logout-button">Sign out</a>
+        </aside>
+
+        <main class="profile-content">
+            <header class="profile-header">
+                <div>
+                    <h1>Profile</h1>
+                    <p>View your account information and activity details.</p>
+                </div>
+
+                <div class="header-actions">
+                    <a href="dashboard.html" class="header-button">Back to dashboard</a>
+                    <a href="locations.html" class="header-button primary">Browse facilities</a>
+                </div>
+            </header>
+
+            <section class="profile-main">
+                <div class="profile-card large-profile-card">
+                    <div class="profile-top">
+                        <div class="profile-avatar-large" id="profileInitials">U</div>
+
+                        <div>
+                            <h2 id="profileUsername">User</h2>
+                            <p id="profileEmail">No email available</p>
+                            <span class="level-pill" id="profileSkillLevel">Student</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-grid">
+                    <div class="profile-card">
+                        <h3>Account Details</h3>
+
+                        <div class="info-row">
+                            <span>Username</span>
+                            <strong id="infoUsername">User</strong>
+                        </div>
+
+                        <div class="info-row">
+                            <span>Email</span>
+                            <strong id="infoEmail">N/A</strong>
+                        </div>
+
+                        <div class="info-row">
+                            <span>Skill Level</span>
+                            <strong id="infoSkillLevel">N/A</strong>
+                        </div>
+
+                        <div class="info-row">
+                            <span>Penalties</span>
+                            <strong id="infoPenalties">0</strong>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h3>Interests</h3>
+                        <div id="interestTags" class="interest-tags">
+                            <span class="empty-text">No interests added yet.</span>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h3>Activity Summary</h3>
+
+                        <div class="summary-grid">
+                            <div class="summary-box">
+                                <strong>0</strong>
+                                <span>Events Joined</span>
+                            </div>
+
+                            <div class="summary-box">
+                                <strong>0</strong>
+                                <span>Matches</span>
+                            </div>
+
+                            <div class="summary-box">
+                                <strong>0</strong>
+                                <span>Reviews</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h3>Status</h3>
+                        <div class="status-box">
+                            <div class="status-check">✓</div>
+                            <div>
+                                <strong>Account in good standing</strong>
+                                <p>No active penalties on record.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="profile.js"></script>
+</body>
+</html>
