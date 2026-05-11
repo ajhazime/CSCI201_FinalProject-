@@ -388,6 +388,100 @@ a {
     white-space: nowrap;
 }
 
+.cal-pill.invite-pending {
+    background: rgba(255, 204, 0, 0.22);
+    color: #6a5200;
+    border: 1px solid rgba(255, 204, 0, 0.45);
+}
+
+.invites-panel {
+    margin-bottom: 24px;
+}
+
+.invites-body {
+    padding: 8px 24px 20px 24px;
+}
+
+.invites-empty {
+    margin: 12px 0 8px;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.invite-banner-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 10px;
+    background: #fbfaf9;
+}
+
+.invite-banner-row .invite-meta strong {
+    display: block;
+    font-size: 15px;
+}
+
+.invite-banner-row .invite-meta small {
+    color: var(--muted);
+}
+
+.invite-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.invite-actions button {
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 13px;
+    border: 1px solid #ddd6d0;
+    background: white;
+}
+
+.invite-actions .btn-decline:hover {
+    background: #f8f6f4;
+}
+
+.invite-actions .btn-accept {
+    background: var(--usc-cardinal);
+    border-color: var(--usc-cardinal);
+    color: white;
+}
+
+.invite-actions .btn-accept:hover {
+    background: var(--usc-cardinal-dark);
+}
+
+.invite-chip {
+    display: inline-block;
+    margin-right: 6px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--usc-cardinal);
+}
+
+.table-invite-chip {
+    display: inline-block;
+    margin-right: 6px;
+    font-size: 10px;
+    font-weight: bold;
+    color: #856404;
+    background: rgba(255, 204, 0, 0.25);
+    padding: 2px 7px;
+    border-radius: 999px;
+    vertical-align: middle;
+}
+
 .cal-more {
     font-size: 12px;
     color: var(--muted);

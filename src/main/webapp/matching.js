@@ -1,4 +1,37 @@
 document.addEventListener("DOMContentLoaded", function () {
+    // ----- Sidebar: populate with current logged-in user -----
+    const user = JSON.parse(sessionStorage.getItem("user"));
+    if (!user) {
+        window.location.href = "login.html";
+        return;
+    }
+
+    const username = user.username || "User";
+    const initials = getInitials(username);
+
+    const sidebarUsername = document.getElementById("sidebarUsername");
+    const sidebarInitials = document.getElementById("sidebarInitials");
+    if (sidebarUsername) sidebarUsername.textContent = username;
+    if (sidebarInitials) sidebarInitials.textContent = initials;
+
+    // Logout link wiring (only if it exists in the sidebar)
+    const logoutLink = document.getElementById("logoutLink");
+    if (logoutLink) {
+        logoutLink.addEventListener("click", function (e) {
+            e.preventDefault();
+            fetch("/CampusActivities/logout")
+                .then(function () {
+                    sessionStorage.removeItem("user");
+                    window.location.href = "login.html";
+                })
+                .catch(function () {
+                    sessionStorage.removeItem("user");
+                    window.location.href = "login.html";
+                });
+        });
+    }
+
+    // ----- Load matches -----
     const status  = document.getElementById("status");
     const results = document.getElementById("results");
 
@@ -75,9 +108,7 @@ function buildMatchCard(match) {
     inviteBtn.className = "card-action card-action-primary";
     inviteBtn.textContent = "Invite to Event";
     inviteBtn.addEventListener("click", function () {
-        // TODO: open an invite picker once the events <-> users link exists
-        // e.g. window.location.href = "invite.html?targetUserId=" + match.userID;
-        alert("Invite flow for " + match.username + " coming soon.");
+        openInviteModal(match.userID, match.username);
     });
 
     actions.appendChild(viewBtn);
@@ -104,7 +135,7 @@ function buildMatchCard(match) {
 
 function getInitials(name) {
     if (!name) return "?";
-    const parts = name.replace(/[._-]/g, " ").split(/\s+/).filter(Boolean);
+    const parts = String(name).replace(/[._-]/g, " ").split(/\s+/).filter(Boolean);
     if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }

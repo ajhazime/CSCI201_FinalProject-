@@ -21,6 +21,10 @@ public class Event {
     private boolean currentUserJoined;
     /** Present flag from event_participants for the viewer; null if not joined or unset. */
     private Boolean participantPresent;
+    /** Set for calendar JSON when this viewer has a pending invite (Accept/Decline). */
+    private Integer inviteId;
+    private String viewerInviteStatus;
+    private String inviterUsername;
 
     public Event() {}
 
@@ -71,6 +75,14 @@ public class Event {
 
     public Boolean getParticipantPresent() { return participantPresent; }
     public void setParticipantPresent(Boolean participantPresent) { this.participantPresent = participantPresent; }
+    public Integer getInviteId() { return inviteId; }
+    public void setInviteId(Integer inviteId) { this.inviteId = inviteId; }
+
+    public String getViewerInviteStatus() { return viewerInviteStatus; }
+    public void setViewerInviteStatus(String viewerInviteStatus) { this.viewerInviteStatus = viewerInviteStatus; }
+
+    public String getInviterUsername() { return inviterUsername; }
+    public void setInviterUsername(String inviterUsername) { this.inviterUsername = inviterUsername; }
 
     public boolean isFull() {
         return currentParticipants >= maxParticipants;
