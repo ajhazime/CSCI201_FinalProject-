@@ -430,12 +430,9 @@ public class EventDAO {
     }
 
     public static JoinEventStatus joinEvent(int userId, int eventId) {
-<<<<<<< Updated upstream
         if (UserDAO.isEventActionBlocked(userId)) {
             return JoinEventStatus.EVENT_ACTION_BLOCKED;
         }
-
-=======
         try (Connection conn = DBUtil.getConnection()) {
             conn.setAutoCommit(false);
             try {
@@ -463,7 +460,6 @@ public class EventDAO {
      * Join within an existing transaction. Does not commit or roll back.
      */
     private static JoinEventStatus joinEventTransactional(Connection conn, int userId, int eventId) throws SQLException {
->>>>>>> Stashed changes
         String eventSql = "SELECT id, date, time, end_time, max_participants, current_participants, creator_id, activity_type, location "
                         + "FROM events WHERE id = ? FOR UPDATE";
         String alreadyJoinedSql = "SELECT 1 FROM event_participants WHERE event_id = ? AND user_id = ? LIMIT 1";
@@ -625,19 +621,30 @@ public class EventDAO {
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 Event e = eventFromRs(rs);
+                e.setCurrentUserJoined(false);
+                e.setParticipantPresent(null);
                 byId.put(e.getId(), e);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        String partSql = "SELECT e.* FROM events e INNER JOIN event_participants ep ON e.id = ep.event_id WHERE ep.user_id = ?";
+        String partSql = "SELECT e.*, ep.present AS participant_present "
+                + "FROM events e INNER JOIN event_participants ep ON e.id = ep.event_id "
+                + "WHERE ep.user_id = ?";
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(partSql)) {
             stmt.setInt(1, viewerUserId);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     Event e = eventFromRs(rs);
+                    e.setCurrentUserJoined(true);
+                    Object po = rs.getObject("participant_present");
+                    if (po == null) {
+                        e.setParticipantPresent(null);
+                    } else {
+                        e.setParticipantPresent(((Number) po).intValue() != 0);
+                    }
                     mergeCalendarEvent(byId, e.getId(), e, null, null, null);
                 }
             }
@@ -657,6 +664,10 @@ public class EventDAO {
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     Event e = eventFromRs(rs);
+                    if (!byId.containsKey(e.getId())) {
+                        e.setCurrentUserJoined(false);
+                        e.setParticipantPresent(null);
+                    }
                     int iid = rs.getInt("invite_pk");
                     String inviter = rs.getString("inviter_username");
                     mergeCalendarEvent(byId, e.getId(), e, iid, "PENDING", inviter);
