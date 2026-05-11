@@ -529,6 +529,7 @@ public class EventDAO {
         NOT_PENDING,
         JOIN_FAILED_TIME_CONFLICT,
         JOIN_FAILED_EVENT_FULL,
+        JOIN_FAILED_EVENT_ACTION_BLOCKED,
         JOIN_FAILED_OTHER,
         DB_ERROR
     }
@@ -557,6 +558,11 @@ public class EventDAO {
                     }
                 }
 
+                if (UserDAO.isEventActionBlocked(inviteeUserId)) {
+                    conn.rollback();
+                    return InviteRespondStatus.JOIN_FAILED_EVENT_ACTION_BLOCKED;
+                }
+
                 JoinEventStatus joinStatus = joinEventTransactional(conn, inviteeUserId, eventId);
                 if (joinStatus != JoinEventStatus.SUCCESS && joinStatus != JoinEventStatus.ALREADY_JOINED) {
                     conn.rollback();
@@ -565,6 +571,8 @@ public class EventDAO {
                             return InviteRespondStatus.JOIN_FAILED_TIME_CONFLICT;
                         case EVENT_FULL:
                             return InviteRespondStatus.JOIN_FAILED_EVENT_FULL;
+                        case EVENT_ACTION_BLOCKED:
+                            return InviteRespondStatus.JOIN_FAILED_EVENT_ACTION_BLOCKED;
                         default:
                             return InviteRespondStatus.JOIN_FAILED_OTHER;
                     }
@@ -701,10 +709,6 @@ public class EventDAO {
             }
             map.put(id, incoming);
             return;
-        }
-        if (incoming.isCurrentUserJoined()) {
-            cur.setCurrentUserJoined(true);
-            cur.setParticipantPresent(incoming.getParticipantPresent());
         }
         if (inviteId != null) {
             cur.setInviteId(inviteId);

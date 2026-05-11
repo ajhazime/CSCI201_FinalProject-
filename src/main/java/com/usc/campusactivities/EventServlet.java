@@ -7,6 +7,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import com.google.gson.Gson;
@@ -108,6 +109,10 @@ public class EventServlet extends HttpServlet {
             cancelEvent(request, response);
             return;
         }
+        if ("/respondInvite".equals(servletPath)) {
+            respondInvite(request, response);
+            return;
+        }
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
@@ -207,11 +212,33 @@ public class EventServlet extends HttpServlet {
 
         List<Integer> inviteeIds = parseInviteeIds(request.getParameter("inviteeIds"));
 
+        if (UserDAO.isGuestAccount(user)) {
+            if (!inviteeIds.isEmpty()) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                jsonResponse.addProperty("success", false);
+                jsonResponse.addProperty(
+                    "message",
+                    "Invites are only available for registered USC accounts. Create an account (not guest) to invite others.");
+                response.getWriter().write(jsonResponse.toString());
+                return;
+            }
+        } else {
+            try {
+                inviteeIds = validateInviteeListForRegisteredHost(user.getId(), inviteeIds);
+            } catch (IllegalArgumentException ex) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                jsonResponse.addProperty("success", false);
+                jsonResponse.addProperty("message", ex.getMessage());
+                response.getWriter().write(jsonResponse.toString());
+                return;
+            }
+        }
+
         if (EventDAO.insertEventWithHostAndInvites(event, inviteeIds)) {
             jsonResponse.addProperty("success", true);
             jsonResponse.addProperty("message", "Event created successfully");
             jsonResponse.add("event", new com.google.gson.Gson().toJsonTree(event));
-            jsonResponse.addProperty("invitesCreated", inviteeIds.size());
+            jsonResponse.addProperty("invitesCreated", inviteeIds == null ? 0 : inviteeIds.size());
         } else {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             jsonResponse.addProperty("success", false);
@@ -421,6 +448,13 @@ public class EventServlet extends HttpServlet {
             response.getWriter().write(jsonResponse.toString());
             return;
         }
+        if (UserDAO.isGuestAccount(user)) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "Invites are only available for registered USC accounts.");
+            response.getWriter().write(jsonResponse.toString());
+            return;
+        }
 
         int eventId, inviteeId;
         try {
@@ -430,6 +464,15 @@ public class EventServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             jsonResponse.addProperty("success", false);
             jsonResponse.addProperty("message", "eventId and inviteeId must be valid integers");
+            response.getWriter().write(jsonResponse.toString());
+            return;
+        }
+
+        User invitee = UserDAO.getUserById(inviteeId);
+        if (invitee == null || UserDAO.isGuestAccount(invitee)) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "You can only invite registered USC accounts.");
             response.getWriter().write(jsonResponse.toString());
             return;
         }
@@ -470,6 +513,13 @@ public class EventServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             jsonResponse.addProperty("success", false);
             jsonResponse.addProperty("message", "User not authenticated");
+            response.getWriter().write(jsonResponse.toString());
+            return;
+        }
+        if (UserDAO.isGuestAccount(user)) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "Guest accounts cannot accept or decline invitations. Please register.");
             response.getWriter().write(jsonResponse.toString());
             return;
         }
@@ -533,6 +583,13 @@ public class EventServlet extends HttpServlet {
                 response.setStatus(HttpServletResponse.SC_CONFLICT);
                 jsonResponse.addProperty("success", false);
                 jsonResponse.addProperty("message", "Cannot accept — event is full");
+                break;
+            case JOIN_FAILED_EVENT_ACTION_BLOCKED:
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                jsonResponse.addProperty("success", false);
+                jsonResponse.addProperty(
+                    "message",
+                    "Cannot accept — you have an active event restriction (same as joining).");
                 break;
             default:
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -695,5 +752,35 @@ public class EventServlet extends HttpServlet {
         }
         return ids;
     }
-}
 
+    /**
+     * De-duplicate IDs, skip host, validate each invitee exists and is a registered (non-guest) account.
+     */
+    private static List<Integer> validateInviteeListForRegisteredHost(int hostUserId, List<Integer> rawIds) {
+        if (rawIds == null || rawIds.isEmpty()) {
+            return rawIds != null ? rawIds : new ArrayList<>();
+        }
+        LinkedHashSet<Integer> unique = new LinkedHashSet<>();
+        for (Integer id : rawIds) {
+            if (id == null) {
+                continue;
+            }
+            if (id == hostUserId) {
+                continue;
+            }
+            unique.add(id);
+        }
+        List<Integer> out = new ArrayList<>();
+        for (Integer id : unique) {
+            User invitee = UserDAO.getUserById(id);
+            if (invitee == null) {
+                throw new IllegalArgumentException("Invalid invitee user id: " + id);
+            }
+            if (UserDAO.isGuestAccount(invitee)) {
+                throw new IllegalArgumentException("The guest account cannot be invited. Use a registered USC account.");
+            }
+            out.add(id);
+        }
+        return out;
+    }
+}

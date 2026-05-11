@@ -8,12 +8,21 @@ import java.util.List;
 
 public class UserDAO {
 
+    /** Shared with {@link LoginServlet} guest login; not invited and cannot send invites. */
+    public static final String GUEST_USERNAME = "guest";
+
     private static final ThreadLocal<String> LAST_INSERT_USER_ERROR = new ThreadLocal<>();
 
     public static String consumeInsertUserError() {
         String msg = LAST_INSERT_USER_ERROR.get();
         LAST_INSERT_USER_ERROR.remove();
         return msg;
+    }
+
+    public static boolean isGuestAccount(User user) {
+        return user != null
+            && user.getUsername() != null
+            && GUEST_USERNAME.equalsIgnoreCase(user.getUsername().trim());
     }
 
     private static void attachRestrictionUntil(ResultSet rs, User user) {
@@ -253,15 +262,17 @@ public class UserDAO {
         String sql = "SELECT id, username, email, interests, skill_level, penalties, "
                    + "firstName, lastName, penaltyTracked, avgRating, preferredLocations, '' AS password "
                    + "FROM users "
-                   + "WHERE id <> ? AND (LOWER(username) LIKE ? OR LOWER(email) LIKE ?) "
+                   + "WHERE id <> ? AND LOWER(TRIM(username)) <> LOWER(?) "
+                   + "AND (LOWER(username) LIKE ? OR LOWER(email) LIKE ?) "
                    + "ORDER BY username ASC LIMIT ?";
 
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, excludeUserId);
-            stmt.setString(2, "%" + q + "%");
+            stmt.setString(2, GUEST_USERNAME);
             stmt.setString(3, "%" + q + "%");
-            stmt.setInt(4, limit);
+            stmt.setString(4, "%" + q + "%");
+            stmt.setInt(5, limit);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) users.add(mapUser(rs));
             }
@@ -285,7 +296,7 @@ public class UserDAO {
         List<User> users = new ArrayList<>();
         String sql = "SELECT id, username, email, interests, skill_level, penalties, "
                    + "firstName, lastName, penaltyTracked, avgRating, preferredLocations, '' AS password "
-                   + "FROM users WHERE id <> ? "
+                   + "FROM users WHERE id <> ? AND LOWER(TRIM(username)) <> LOWER(?) "
                    + "ORDER BY "
                    + "  CASE WHEN ? IS NOT NULL AND LOWER(skill_level) = LOWER(?) THEN 0 ELSE 1 END, "
                    + "  CASE WHEN ? IS NOT NULL AND LOWER(interests) LIKE ? THEN 0 ELSE 1 END, "
@@ -294,11 +305,12 @@ public class UserDAO {
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, currentUserId);
-            stmt.setString(2, mySkill);
+            stmt.setString(2, GUEST_USERNAME);
             stmt.setString(3, mySkill);
-            stmt.setString(4, firstInterest);
-            stmt.setString(5, firstInterest == null ? null : "%" + firstInterest + "%");
-            stmt.setInt(6, limit);
+            stmt.setString(4, mySkill);
+            stmt.setString(5, firstInterest);
+            stmt.setString(6, firstInterest == null ? null : "%" + firstInterest + "%");
+            stmt.setInt(7, limit);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) users.add(mapUser(rs));
             }

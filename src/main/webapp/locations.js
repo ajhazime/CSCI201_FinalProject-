@@ -106,14 +106,54 @@ setupUserInfo();
 initMap();
 loadFacilities();
 
+function apiUrl(path) {
+    return typeof campusFitUrl === "function" ? campusFitUrl(path) : path;
+}
+
+function isGuestUser(u) {
+    return (
+        !u ||
+        u.id === 0 ||
+        String(u.username || "").trim().toLowerCase() === "guest"
+    );
+}
+
+function refreshSessionUser() {
+    const localUser = JSON.parse(sessionStorage.getItem("user") || "null");
+    if (!localUser) {
+        return Promise.resolve(null);
+    }
+    return fetch(apiUrl("api/users?me=true"), { credentials: "same-origin" })
+        .then(function (res) {
+            if (res.status === 401) {
+                return null;
+            }
+            return res.json();
+        })
+        .then(function (u) {
+            if (u && u.id !== undefined) {
+                try {
+                    sessionStorage.setItem("user", JSON.stringify(u));
+                } catch (e) {
+                    /* ignore */
+                }
+                return u;
+            }
+            return null;
+        })
+        .catch(function () {
+            return null;
+        });
+}
+
 function showGuestModal() {
     const modal = document.getElementById("guestModal");
     if (modal) modal.style.display = "flex";
 }
 
 function setupUserInfo() {
-    const user = JSON.parse(sessionStorage.getItem("user"));
-    const isGuest = !user || user.id === 0;
+    const user = JSON.parse(sessionStorage.getItem("user") || "null");
+    const isGuest = isGuestUser(user);
     const nameEl = document.getElementById("sidebarName");
     const initialsEl = document.getElementById("profileInitials");
 
@@ -141,6 +181,19 @@ function setupUserInfo() {
             });
         }
     }
+
+    // Try to keep sidebar info consistent across pages (pull fresh DB-backed user).
+    refreshSessionUser().then(function (fresh) {
+        if (!fresh || !fresh.username) {
+            return;
+        }
+        if (nameEl) {
+            nameEl.textContent = fresh.username;
+        }
+        if (initialsEl) {
+            initialsEl.textContent = getInitials(fresh.username);
+        }
+    });
 }
 
 function initMap() {
@@ -158,7 +211,7 @@ async function loadFacilities() {
     });
 
     try {
-        const response = await fetch("api/locations");
+        const response = await fetch(apiUrl("api/locations"), { credentials: "same-origin" });
 
         if (response.ok) {
             const backendFacilities = await response.json();
@@ -319,8 +372,8 @@ function renderDetailPanel() {
         </div>
 
         ${(function() {
-            const sessionUser = JSON.parse(sessionStorage.getItem("user"));
-            const isGuest = !sessionUser || sessionUser.id === 0;
+            const sessionUser = JSON.parse(sessionStorage.getItem("user") || "null");
+            const isGuest = isGuestUser(sessionUser);
             if (isGuest) {
                 return `<div class="detail-section-title">Leave a review</div>
                 <div class="review-login-prompt"><a href="index.html">Log in</a> to leave a review.</div>`;
@@ -430,12 +483,13 @@ function bindReviewForm() {
         formData.append("review", text);
 
         try {
-            const response = await fetch("api/locations", {
+            const response = await fetch(apiUrl("api/locations"), {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded"
                 },
-                body: formData.toString()
+                body: formData.toString(),
+                credentials: "same-origin"
             });
 
             const result = await response.json();

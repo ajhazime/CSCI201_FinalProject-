@@ -1,4 +1,21 @@
-const sessionUser = JSON.parse(sessionStorage.getItem("user") || "null");
+function readSessionUserSafely() {
+    try {
+        const raw = sessionStorage.getItem("user");
+        if (!raw || raw === "undefined") {
+            return null;
+        }
+        return JSON.parse(raw);
+    } catch (e) {
+        try {
+            sessionStorage.removeItem("user");
+        } catch (ignored) {
+            /* ignore */
+        }
+        return null;
+    }
+}
+
+let sessionUser = readSessionUserSafely();
 
 let profilePenaltyInterval = null;
 
@@ -155,6 +172,10 @@ function applyStatusPanel(u, isOwnProfile) {
 function refreshOwnProfileFromServer() {
     fetch(meApiUrl(), { credentials: "same-origin" })
         .then(function (res) {
+            if (res.status === 401) {
+                window.location.href = "login.html";
+                return null;
+            }
             return res.json();
         })
         .then(function (u) {
@@ -173,6 +194,50 @@ function refreshOwnProfileFromServer() {
         });
 }
 
+/** When GET /api/profile is missing, errors, or returns success:false — load live user from DB and fill the UI. */
+function loadOwnProfileFromMeFallback() {
+    fetch(meApiUrl(), { credentials: "same-origin" })
+        .then(function (res) {
+            if (res.status === 401) {
+                window.location.href = "login.html";
+                return null;
+            }
+            return res.json();
+        })
+        .then(function (u) {
+            if (u && u.id !== undefined) {
+                profileUserId = u.id;
+                populateProfile(u, true);
+                applyStatusPanel(u, true);
+                try {
+                    sessionStorage.setItem("user", JSON.stringify(u));
+                } catch (e) {
+                    /* ignore */
+                }
+                loadAvailability();
+                loadProfileStats();
+                document.getElementById("editProfileBtn").style.display = "inline-block";
+                prefillEditForm(u);
+                loadRatingDisplay(u.id);
+                loadHostAppeals();
+                renderActivityHistory([]);
+                return;
+            }
+            if (sessionUser) {
+                hydrateOwnProfilePartial(sessionUser, true);
+                return;
+            }
+            showOwnProfileLoadFailedBanner();
+        })
+        .catch(function () {
+            if (sessionUser) {
+                hydrateOwnProfilePartial(sessionUser, true);
+                return;
+            }
+            showOwnProfileLoadFailedBanner();
+        });
+}
+
 if (!sessionUser) {
     window.location.href = "login.html";
 } else {
@@ -187,7 +252,52 @@ const isOwnProfile = !viewingUserId || (sessionUser && String(viewingUserId) ===
 let profileUserId = null;
 let selectedRating = 0;
 
+/** Fill the visible profile + status panel from cached session data immediately – avoids staring at HTML placeholders (“User”, “Loading…”) while /api/profile is in flight or if it hangs. */
+function hydrateOwnProfilePartial(fromUser, runSecondaryLoads) {
+    if (!fromUser) {
+        return;
+    }
+    if (fromUser.id != null && fromUser.id !== "") {
+        profileUserId = fromUser.id;
+    }
+    populateProfile(fromUser);
+    applyStatusPanel(fromUser, true);
+    var editBtn = document.getElementById("editProfileBtn");
+    if (editBtn) {
+        editBtn.style.display = "inline-block";
+    }
+    try {
+        prefillEditForm(fromUser);
+    } catch (e) {
+        /* ignore */
+    }
+    if (!runSecondaryLoads) {
+        return;
+    }
+    loadAvailability();
+    loadProfileStats();
+    if (profileUserId != null && profileUserId !== "") {
+        loadRatingDisplay(Number(profileUserId));
+    }
+    loadHostAppeals();
+    renderActivityHistory([]);
+}
+
+function showOwnProfileLoadFailedBanner() {
+    applyStatusPanel({}, true);
+    var titleEl = document.getElementById("statusTitle");
+    var descEl = document.getElementById("statusDesc");
+    if (titleEl) {
+        titleEl.textContent = "Could not load profile";
+    }
+    if (descEl) {
+        descEl.textContent =
+            "Signed in browser session may have expired — try refreshing this page or signing in again.";
+    }
+}
+
 if (isOwnProfile) {
+    hydrateOwnProfilePartial(sessionUser, false);
     fetch(typeof campusFitUrl === "function" ? campusFitUrl("api/profile") : "/CampusActivities/api/profile", {
         credentials: "same-origin"
     })
@@ -196,22 +306,32 @@ if (isOwnProfile) {
             return res.json();
         })
         .then(function(data) {
-            if (!data || !data.success) return;
-            profileUserId = data.user.id;
-            populateProfile(data.user);
-            applyStatusPanel(data.user, true);
-            loadAvailability();
-            loadProfileStats();
-            document.getElementById("eventsJoinedCount").textContent = data.eventsJoined || 0;
-            document.getElementById("ratingsReceivedCount").textContent = data.ratingCount || 0;
-            document.getElementById("editProfileBtn").style.display = "inline-block";
-            prefillEditForm(data.user);
-            loadRatingDisplay(data.user.id);
-            renderActivityHistory(data.activityHistory || []);
-            loadHostAppeals();
+            if (data && data.success && data.user) {
+                profileUserId = data.user.id;
+                populateProfile(data.user);
+                applyStatusPanel(data.user, true);
+                try {
+                    sessionStorage.setItem("user", JSON.stringify(data.user));
+                } catch (e) {
+                    /* ignore */
+                }
+                loadAvailability();
+                loadProfileStats();
+                var ej = document.getElementById("eventsJoinedCount");
+                if (ej) ej.textContent = data.eventsJoined || 0;
+                var rc = document.getElementById("ratingsReceivedCount");
+                if (rc) rc.textContent = data.ratingCount || 0;
+                document.getElementById("editProfileBtn").style.display = "inline-block";
+                prefillEditForm(data.user);
+                loadRatingDisplay(data.user.id);
+                renderActivityHistory(data.activityHistory || []);
+                loadHostAppeals();
+                return;
+            }
+            loadOwnProfileFromMeFallback();
         })
         .catch(function() {
-            if (sessionUser) { populateProfile(sessionUser); applyStatusPanel(sessionUser, true); }
+            loadOwnProfileFromMeFallback();
         });
 } else {
     const availCard = document.getElementById("availabilityCard");
@@ -577,6 +697,10 @@ function loadProfileStats() {
             if (el) el.textContent = data.matchesFound;
             el = document.getElementById("summaryReviews");
             if (el) el.textContent = data.reviewsCount;
+            var joinedMain = document.getElementById("eventsJoinedCount");
+            if (joinedMain && data.eventsJoined !== undefined) {
+                joinedMain.textContent = data.eventsJoined;
+            }
         })
         .catch(function () { /* non-critical */ });
 }
