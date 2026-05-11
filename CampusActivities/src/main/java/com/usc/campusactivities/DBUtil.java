@@ -10,7 +10,7 @@ public class DBUtil {
 <<<<<<< Updated upstream
     private static final String PASSWORD = "password"; // Change as needed
 =======
-    private static final String PASSWORD = "Rfbc8089inj!2005"; // Change as needed
+    private static final String PASSWORD = "password123"; // Change as needed
 >>>>>>> Stashed changes
 
     public static Connection getConnection() throws SQLException {
