@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USC FIT - Create Event</title>
+    <link rel="stylesheet" href="createEvent.css">
+</head>
+<body>
+    <div class="create-wrapper">
+        <aside class="create-sidebar">
+            <div>
+                <div class="sidebar-brand">
+                    <h1>USC FIT</h1>
+                    <p>CAMPUS FITNESS</p>
+                </div>
+
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar" id="sidebarInitials">U</div>
+                    <div>
+                        <div class="sidebar-user-name" id="sidebarUsername">User</div>
+                        <div class="sidebar-user-level">Student</div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">MAIN</div>
+                <a href="dashboard.html" class="sidebar-link">Dashboard</a>
+                <a href="activities.html" class="sidebar-link">Events</a>
+                <a href="createEvent.html" class="sidebar-link active">Create Event</a>
+                <a href="matching.html" class="sidebar-link">My Matches</a>
+
+                <div class="sidebar-section">EXPLORE</div>
+                <a href="locations.html" class="sidebar-link">Facilities</a>
+
+                <div class="sidebar-section">ACCOUNT</div>
+                <a href="profile.html" class="sidebar-link">Profile</a>
+            </div>
+
+            <a href="logout" id="logoutLink" class="logout-button">Sign out</a>
+        </aside>
+
+        <main class="create-content">
+            <header class="create-header">
+                <div>
+                    <h1>Create New Event</h1>
+                    <p>Host a campus activity for other Trojans.</p>
+                </div>
+                <div class="header-actions">
+                    <a href="activities.html" class="header-button">Back to events</a>
+                    <a href="dashboard.html" class="header-button">Dashboard</a>
+                </div>
+            </header>
+
+            <div class="create-main">
+                <form id="createEventForm">
+                    <div class="grid">
+                        <div>
+                            <div class="card">
+                                <div class="card-header">
+                                    <h2>Event Details</h2>
+                                </div>
+                                <div class="card-body">
+                                    <div class="section">
+                                        <div class="section-title">Activity</div>
+                                        <div class="field">
+                                            <label for="activityType">Activity Type</label>
+                                            <select id="activityType" name="activityType" required></select>
+                                        </div>
+                                    </div>
+
+                                    <div class="section">
+                                        <div class="section-title">Location</div>
+                                        <div class="field">
+                                            <label for="location">Location (approved facility)</label>
+                                            <select id="location" name="location" required></select>
+                                        </div>
+                                    </div>
+
+                                    <div class="section">
+                                        <div class="section-title">Date & Time</div>
+                                        <div class="two-col">
+                                            <div class="field">
+                                                <label for="date">Date</label>
+                                                <input id="date" type="date" name="date" required>
+                                                <div class="calendar-box">
+                                                    <div class="calendar-header">
+                                                        <button id="calendarPrev" class="calendar-nav" type="button">‹</button>
+                                                        <strong id="calendarTitle">Month YYYY</strong>
+                                                        <button id="calendarNext" class="calendar-nav" type="button">›</button>
+                                                    </div>
+                                                    <div id="calendarGrid" class="calendar-grid"></div>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div class="field">
+                                                    <label for="startTime">Start Time</label>
+                                                    <input id="startTime" type="time" name="startTime" required>
+                                                </div>
+                                                <div class="field">
+                                                    <label for="endTime">End Time</label>
+                                                    <input id="endTime" type="time" name="endTime" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="section">
+                                        <div class="section-title">Capacity</div>
+                                        <label for="maxParticipants">Max Participants</label>
+                                        <div class="capacity-control">
+                                            <button type="button" id="decreaseCapacity">-</button>
+                                            <input id="maxParticipants" type="number" name="maxParticipants" min="1" value="10" required>
+                                            <button type="button" id="increaseCapacity">+</button>
+                                        </div>
+                                        <div class="small-note">You'll be the first participant.</div>
+                                    </div>
+
+                                    <div class="section">
+                                        <div class="section-title">Visibility</div>
+                                        <label class="checkbox-row">
+                                            <input id="isPublic" type="checkbox" name="isPublic" checked>
+                                            <span>Public event (shows on Events page)</span>
+                                        </label>
+                                        <div class="small-note">Turn this off to make a private event.</div>
+                                    </div>
+
+                                    <div class="section">
+                                        <div class="section-title">Invite users</div>
+                                        <input id="inviteeIds" type="hidden" name="inviteeIds" value="">
+                                        <div class="small-note" style="margin-bottom: 8px;">Suggested for you:</div>
+                                        <div id="inviteSuggestions" class="invite-results"></div>
+                                        <div class="invite-search">
+                                            <input id="inviteSearch" type="text" placeholder="Search users by username or email">
+                                        </div>
+                                        <div id="inviteResults" class="invite-results"></div>
+                                        <div id="inviteStatus"></div>
+                                        <div class="small-note" style="margin-top: 12px;">Selected invitees:</div>
+                                        <div id="inviteSelected" class="invite-selected"></div>
+                                    </div>
+
+                                    <div class="submit-row">
+                                        <button type="submit">Create Event</button>
+                                    </div>
+                                    <div id="error"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="card">
+                                <div class="card-header">
+                                    <h2>Event Preview</h2>
+                                </div>
+                                <div class="card-body">
+                                    <div class="preview-item">
+                                        <div class="preview-label">Activity Type</div>
+                                        <div id="previewActivity" class="preview-value">Basketball</div>
+                                    </div>
+                                    <div class="preview-item">
+                                        <div class="preview-label">Location</div>
+                                        <div id="previewLocation" class="preview-value">Lyon Center</div>
+                                    </div>
+                                    <div class="preview-item">
+                                        <div class="preview-label">Date</div>
+                                        <div id="previewDate" class="preview-value">-</div>
+                                    </div>
+                                    <div class="preview-item">
+                                        <div class="preview-label">Time</div>
+                                        <div id="previewTime" class="preview-value">-</div>
+                                    </div>
+                                    <div class="preview-item">
+                                        <div class="preview-label">Max Capacity</div>
+                                        <div id="previewCapacity" class="preview-value">10 Participants</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card" style="margin-top: 18px;">
+                                <div class="card-header">
+                                    <h2>Quick Suggestions</h2>
+                                </div>
+                                <div class="card-body">
+                                    <div class="tag-wrap">
+                                        <button class="quick-tag" type="button" data-activity="Weightlifting" data-location="Lyon Center" data-start="18:00" data-end="19:30" data-capacity="10">Strength Training</button>
+                                        <button class="quick-tag" type="button" data-activity="Soccer" data-location="PED South Gym" data-start="17:30" data-end="19:00" data-capacity="14">Soccer</button>
+                                        <button class="quick-tag" type="button" data-activity="Swimming" data-location="Uytengsu Aquatics Center" data-start="12:00" data-end="13:00" data-capacity="8">Lap Swimming</button>
+                                        <button class="quick-tag" type="button" data-activity="Yoga" data-location="USC Village Fitness Center" data-start="07:30" data-end="08:30" data-capacity="12">Morning Yoga</button>
+                                        <button class="quick-tag" type="button" data-activity="Pilates" data-location="HSC Fitness Center" data-start="16:00" data-end="17:00" data-capacity="10">Pilates Core</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card" style="margin-top: 18px;">
+                                <div class="card-header">
+                                    <h2>Tips</h2>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="tips">
+                                        <li>Choose a time when most people are available.</li>
+                                        <li>Be specific in your activity type.</li>
+                                        <li>Review facility rules before posting.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script src="app-context.js"></script>
+    <script src="logout.js"></script>
+    <script src="createEvent.js"></script>
+</body>
+</html>

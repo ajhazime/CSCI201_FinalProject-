@@ -17,10 +17,17 @@ public class Event {
     private int currentParticipants;
     private int creatorId;
     private boolean isPublic = true;
+<<<<<<< Updated upstream
     /** Set when listing events for the current viewer (GET /events). */
     private boolean currentUserJoined;
     /** Present flag from event_participants for the viewer; null if not joined or unset. */
     private Boolean participantPresent;
+=======
+    /** Set for calendar JSON when this viewer has a pending invite (Accept/Decline). */
+    private Integer inviteId;
+    private String viewerInviteStatus;
+    private String inviterUsername;
+>>>>>>> Stashed changes
 
     public Event() {}
 
@@ -66,11 +73,22 @@ public class Event {
     public boolean isPublic() { return isPublic; }
     public void setPublic(boolean isPublic) { this.isPublic = isPublic; }
 
+<<<<<<< Updated upstream
     public boolean isCurrentUserJoined() { return currentUserJoined; }
     public void setCurrentUserJoined(boolean currentUserJoined) { this.currentUserJoined = currentUserJoined; }
 
     public Boolean getParticipantPresent() { return participantPresent; }
     public void setParticipantPresent(Boolean participantPresent) { this.participantPresent = participantPresent; }
+=======
+    public Integer getInviteId() { return inviteId; }
+    public void setInviteId(Integer inviteId) { this.inviteId = inviteId; }
+
+    public String getViewerInviteStatus() { return viewerInviteStatus; }
+    public void setViewerInviteStatus(String viewerInviteStatus) { this.viewerInviteStatus = viewerInviteStatus; }
+
+    public String getInviterUsername() { return inviterUsername; }
+    public void setInviterUsername(String inviterUsername) { this.inviterUsername = inviterUsername; }
+>>>>>>> Stashed changes
 
     public boolean isFull() {
         return currentParticipants >= maxParticipants;

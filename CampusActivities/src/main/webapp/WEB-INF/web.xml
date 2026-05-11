@@ -50,6 +50,7 @@
   </servlet-mapping>
   <servlet-mapping>
     <servlet-name>EventServlet</servlet-name>
+<<<<<<< Updated upstream
     <url-pattern>/myEvents</url-pattern>
   </servlet-mapping>
   <servlet-mapping>
@@ -76,6 +77,10 @@
     <servlet-name>EventServlet</servlet-name>
     <url-pattern>/markAttendance</url-pattern>
   </servlet-mapping>
+=======
+    <url-pattern>/respondInvite</url-pattern>
+  </servlet-mapping>
+>>>>>>> Stashed changes
 
   <servlet>
     <servlet-name>LogoutServlet</servlet-name>

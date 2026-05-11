@@ -430,82 +430,290 @@ public class EventDAO {
     }
 
     public static JoinEventStatus joinEvent(int userId, int eventId) {
+<<<<<<< Updated upstream
         if (UserDAO.isEventActionBlocked(userId)) {
             return JoinEventStatus.EVENT_ACTION_BLOCKED;
         }
 
+=======
+        try (Connection conn = DBUtil.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                JoinEventStatus status = joinEventTransactional(conn, userId, eventId);
+                if (status == JoinEventStatus.SUCCESS) {
+                    conn.commit();
+                } else {
+                    conn.rollback();
+                }
+                return status;
+            } catch (SQLException e) {
+                conn.rollback();
+                e.printStackTrace();
+                return JoinEventStatus.DB_ERROR;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return JoinEventStatus.DB_ERROR;
+        }
+    }
+
+    /**
+     * Join within an existing transaction. Does not commit or roll back.
+     */
+    private static JoinEventStatus joinEventTransactional(Connection conn, int userId, int eventId) throws SQLException {
+>>>>>>> Stashed changes
         String eventSql = "SELECT id, date, time, end_time, max_participants, current_participants, creator_id, activity_type, location "
                         + "FROM events WHERE id = ? FOR UPDATE";
         String alreadyJoinedSql = "SELECT 1 FROM event_participants WHERE event_id = ? AND user_id = ? LIMIT 1";
         String insertParticipantSql = "INSERT INTO event_participants (event_id, user_id, role) VALUES (?, ?, 'PARTICIPANT')";
         String incrementSql = "UPDATE events SET current_participants = current_participants + 1 WHERE id = ?";
 
-        try (Connection conn = DBUtil.getConnection()) {
-            conn.setAutoCommit(false);
-            try (PreparedStatement eventStmt = conn.prepareStatement(eventSql)) {
-                eventStmt.setInt(1, eventId);
-                try (ResultSet rs = eventStmt.executeQuery()) {
-                    if (!rs.next()) {
-                        conn.rollback();
-                        return JoinEventStatus.EVENT_NOT_FOUND;
-                    }
+        try (PreparedStatement eventStmt = conn.prepareStatement(eventSql)) {
+            eventStmt.setInt(1, eventId);
+            try (ResultSet rs = eventStmt.executeQuery()) {
+                if (!rs.next()) {
+                    return JoinEventStatus.EVENT_NOT_FOUND;
+                }
 
-                    Event newEvent = new Event(
-                        rs.getInt("id"),
-                        rs.getString("activity_type"),
-                        rs.getString("location"),
-                        rs.getString("date"),
-                        rs.getString("time"),
-                        rs.getInt("max_participants"),
-                        rs.getInt("current_participants"),
-                        rs.getInt("creator_id")
-                    );
-                    newEvent.setEndTime(rs.getString("end_time"));
+                Event newEvent = new Event(
+                    rs.getInt("id"),
+                    rs.getString("activity_type"),
+                    rs.getString("location"),
+                    rs.getString("date"),
+                    rs.getString("time"),
+                    rs.getInt("max_participants"),
+                    rs.getInt("current_participants"),
+                    rs.getInt("creator_id")
+                );
+                newEvent.setEndTime(rs.getString("end_time"));
 
-                    try (PreparedStatement alreadyJoinedStmt = conn.prepareStatement(alreadyJoinedSql)) {
-                        alreadyJoinedStmt.setInt(1, eventId);
-                        alreadyJoinedStmt.setInt(2, userId);
-                        try (ResultSet joinedRs = alreadyJoinedStmt.executeQuery()) {
-                            if (joinedRs.next()) {
-                                conn.rollback();
-                                return JoinEventStatus.ALREADY_JOINED;
-                            }
-                        }
-                    }
-
-                    if (checkTimeConflict(conn, userId, newEvent, eventId)) {
-                        conn.rollback();
-                        return JoinEventStatus.TIME_CONFLICT;
-                    }
-
-                    if (newEvent.getCurrentParticipants() >= newEvent.getMaxParticipants()) {
-                        conn.rollback();
-                        return JoinEventStatus.EVENT_FULL;
-                    }
-
-                    try (PreparedStatement insertStmt = conn.prepareStatement(insertParticipantSql);
-                         PreparedStatement incrementStmt = conn.prepareStatement(incrementSql)) {
-                        insertStmt.setInt(1, eventId);
-                        insertStmt.setInt(2, userId);
-                        if (insertStmt.executeUpdate() == 0) {
-                            conn.rollback();
-                            return JoinEventStatus.DB_ERROR;
-                        }
-
-                        incrementStmt.setInt(1, eventId);
-                        if (incrementStmt.executeUpdate() == 0) {
-                            conn.rollback();
-                            return JoinEventStatus.DB_ERROR;
+                try (PreparedStatement alreadyJoinedStmt = conn.prepareStatement(alreadyJoinedSql)) {
+                    alreadyJoinedStmt.setInt(1, eventId);
+                    alreadyJoinedStmt.setInt(2, userId);
+                    try (ResultSet joinedRs = alreadyJoinedStmt.executeQuery()) {
+                        if (joinedRs.next()) {
+                            return JoinEventStatus.ALREADY_JOINED;
                         }
                     }
                 }
+
+                if (checkTimeConflict(conn, userId, newEvent, eventId)) {
+                    return JoinEventStatus.TIME_CONFLICT;
+                }
+
+                if (newEvent.getCurrentParticipants() >= newEvent.getMaxParticipants()) {
+                    return JoinEventStatus.EVENT_FULL;
+                }
+
+                try (PreparedStatement insertStmt = conn.prepareStatement(insertParticipantSql);
+                     PreparedStatement incrementStmt = conn.prepareStatement(incrementSql)) {
+                    insertStmt.setInt(1, eventId);
+                    insertStmt.setInt(2, userId);
+                    if (insertStmt.executeUpdate() == 0) {
+                        return JoinEventStatus.DB_ERROR;
+                    }
+
+                    incrementStmt.setInt(1, eventId);
+                    if (incrementStmt.executeUpdate() == 0) {
+                        return JoinEventStatus.DB_ERROR;
+                    }
+                }
             }
-            conn.commit();
-            return JoinEventStatus.SUCCESS;
+        }
+        return JoinEventStatus.SUCCESS;
+    }
+
+    public enum InviteRespondStatus {
+        ACCEPTED_OK,
+        DECLINED_OK,
+        INVITE_NOT_FOUND,
+        FORBIDDEN,
+        NOT_PENDING,
+        JOIN_FAILED_TIME_CONFLICT,
+        JOIN_FAILED_EVENT_FULL,
+        JOIN_FAILED_OTHER,
+        DB_ERROR
+    }
+
+    public static InviteRespondStatus acceptInvite(int inviteId, int inviteeUserId) {
+        String lockInvite = "SELECT id, event_id, status FROM event_invites WHERE id = ? AND invitee_id = ? FOR UPDATE";
+        String markAccepted = "UPDATE event_invites SET status = 'ACCEPTED' WHERE id = ? AND invitee_id = ? AND status = 'PENDING'";
+
+        try (Connection conn = DBUtil.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                int eventId;
+                try (PreparedStatement stmt = conn.prepareStatement(lockInvite)) {
+                    stmt.setInt(1, inviteId);
+                    stmt.setInt(2, inviteeUserId);
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        if (!rs.next()) {
+                            conn.rollback();
+                            return InviteRespondStatus.INVITE_NOT_FOUND;
+                        }
+                        if (!"PENDING".equalsIgnoreCase(rs.getString("status"))) {
+                            conn.rollback();
+                            return InviteRespondStatus.NOT_PENDING;
+                        }
+                        eventId = rs.getInt("event_id");
+                    }
+                }
+
+                JoinEventStatus joinStatus = joinEventTransactional(conn, inviteeUserId, eventId);
+                if (joinStatus != JoinEventStatus.SUCCESS && joinStatus != JoinEventStatus.ALREADY_JOINED) {
+                    conn.rollback();
+                    switch (joinStatus) {
+                        case TIME_CONFLICT:
+                            return InviteRespondStatus.JOIN_FAILED_TIME_CONFLICT;
+                        case EVENT_FULL:
+                            return InviteRespondStatus.JOIN_FAILED_EVENT_FULL;
+                        default:
+                            return InviteRespondStatus.JOIN_FAILED_OTHER;
+                    }
+                }
+
+                try (PreparedStatement stmt = conn.prepareStatement(markAccepted)) {
+                    stmt.setInt(1, inviteId);
+                    stmt.setInt(2, inviteeUserId);
+                    if (stmt.executeUpdate() == 0) {
+                        conn.rollback();
+                        return InviteRespondStatus.NOT_PENDING;
+                    }
+                }
+
+                conn.commit();
+                return InviteRespondStatus.ACCEPTED_OK;
+            } catch (SQLException e) {
+                conn.rollback();
+                e.printStackTrace();
+                return InviteRespondStatus.DB_ERROR;
+            } finally {
+                conn.setAutoCommit(true);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
-            return JoinEventStatus.DB_ERROR;
+            return InviteRespondStatus.DB_ERROR;
         }
+    }
+
+    public static InviteRespondStatus declineInvite(int inviteId, int inviteeUserId) {
+        String sql = "UPDATE event_invites SET status = 'DECLINED' WHERE id = ? AND invitee_id = ? AND status = 'PENDING'";
+        try (Connection conn = DBUtil.getConnection()) {
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, inviteId);
+                stmt.setInt(2, inviteeUserId);
+                if (stmt.executeUpdate() > 0) {
+                    return InviteRespondStatus.DECLINED_OK;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return InviteRespondStatus.DB_ERROR;
+        }
+        return InviteRespondStatus.INVITE_NOT_FOUND;
+    }
+
+    /** Public events, events you joined (including private), and events with a pending invite. */
+    public static List<Event> getCalendarEventsForViewer(int viewerUserId) {
+        Map<Integer, Event> byId = new HashMap<>();
+
+        String pubSql = "SELECT * FROM events WHERE is_public = true";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(pubSql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                Event e = eventFromRs(rs);
+                byId.put(e.getId(), e);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        String partSql = "SELECT e.* FROM events e INNER JOIN event_participants ep ON e.id = ep.event_id WHERE ep.user_id = ?";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(partSql)) {
+            stmt.setInt(1, viewerUserId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Event e = eventFromRs(rs);
+                    mergeCalendarEvent(byId, e.getId(), e, null, null, null);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        String pendSql = "SELECT e.id, e.activity_type, e.location, e.date, e.time, e.end_time, "
+                       + "e.max_participants, e.current_participants, e.is_public, e.creator_id, "
+                       + "ei.id AS invite_pk, inv.username AS inviter_username "
+                       + "FROM events e INNER JOIN event_invites ei ON e.id = ei.event_id "
+                       + "JOIN users inv ON inv.id = ei.inviter_id "
+                       + "WHERE ei.invitee_id = ? AND ei.status = 'PENDING'";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(pendSql)) {
+            stmt.setInt(1, viewerUserId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Event e = eventFromRs(rs);
+                    int iid = rs.getInt("invite_pk");
+                    String inviter = rs.getString("inviter_username");
+                    mergeCalendarEvent(byId, e.getId(), e, iid, "PENDING", inviter);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        List<Event> out = new ArrayList<>(byId.values());
+        out.sort((a, b) -> {
+            int c = Comparator.nullsLast(String::compareTo).compare(
+                a.getDate() == null ? null : String.valueOf(a.getDate()),
+                b.getDate() == null ? null : String.valueOf(b.getDate()));
+            if (c != 0) return c;
+            return Comparator.nullsLast(String::compareTo).compare(
+                a.getTime() == null ? null : String.valueOf(a.getTime()),
+                b.getTime() == null ? null : String.valueOf(b.getTime()));
+        });
+        return out;
+    }
+
+    private static void mergeCalendarEvent(Map<Integer, Event> map, int id, Event incoming,
+                                           Integer inviteId, String viewerInviteStatus, String inviterUsername) {
+        Event cur = map.get(id);
+        if (cur == null) {
+            if (inviteId != null) {
+                incoming.setInviteId(inviteId);
+                incoming.setViewerInviteStatus(viewerInviteStatus);
+                incoming.setInviterUsername(inviterUsername);
+            }
+            map.put(id, incoming);
+            return;
+        }
+        if (inviteId != null) {
+            cur.setInviteId(inviteId);
+            cur.setViewerInviteStatus(viewerInviteStatus);
+            if (inviterUsername != null) {
+                cur.setInviterUsername(inviterUsername);
+            }
+        }
+    }
+
+    private static Event eventFromRs(ResultSet rs) throws SQLException {
+        Event event = new Event(
+            rs.getInt("id"),
+            rs.getString("activity_type"),
+            rs.getString("location"),
+            rs.getString("date"),
+            rs.getString("time"),
+            rs.getInt("max_participants"),
+            rs.getInt("current_participants"),
+            rs.getInt("creator_id")
+        );
+        event.setEndTime(rs.getString("end_time"));
+        event.setPublic(rs.getBoolean("is_public"));
+        return event;
     }
 
     public static LeaveEventResult leaveEvent(int userId, int eventId) {

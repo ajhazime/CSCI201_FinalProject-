@@ -26,6 +26,7 @@ public class EventServlet extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
+<<<<<<< Updated upstream
         if ("/myEvents".equals(request.getServletPath())) {
             HttpSession session = request.getSession(false);
             User user = session == null ? null : (User) session.getAttribute("user");
@@ -78,6 +79,15 @@ public class EventServlet extends HttpServlet {
         User eventsViewer = eventsSession == null ? null : (User) eventsSession.getAttribute("user");
         int viewerId = eventsViewer == null ? -1 : eventsViewer.getId();
         List<Event> events = EventDAO.getAllEventsForViewer(viewerId);
+=======
+        HttpSession session = request.getSession(false);
+        User viewer = session == null ? null : (User) session.getAttribute("user");
+        List<Event> events =
+            viewer != null && viewer.getId() > 0
+                ? EventDAO.getCalendarEventsForViewer(viewer.getId())
+                : EventDAO.getAllEvents();
+
+>>>>>>> Stashed changes
         response.getWriter().write(new Gson().toJson(events));
     }
 
@@ -107,6 +117,10 @@ public class EventServlet extends HttpServlet {
         }
         if ("/cancelEvent".equals(servletPath)) {
             cancelEvent(request, response);
+            return;
+        }
+        if ("/respondInvite".equals(servletPath)) {
+            respondInvite(request, response);
             return;
         }
 
@@ -409,6 +423,7 @@ public class EventServlet extends HttpServlet {
         response.getWriter().write(jsonResponse.toString());
     }
 
+<<<<<<< Updated upstream
     private void sendInvite(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
@@ -461,6 +476,8 @@ public class EventServlet extends HttpServlet {
         response.getWriter().write(jsonResponse.toString());
     }
 
+=======
+>>>>>>> Stashed changes
     private void respondInvite(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
@@ -468,7 +485,11 @@ public class EventServlet extends HttpServlet {
         JsonObject jsonResponse = new JsonObject();
         HttpSession session = request.getSession(false);
         User user = session == null ? null : (User) session.getAttribute("user");
+<<<<<<< Updated upstream
         if (user == null) {
+=======
+        if (user == null || user.getId() <= 0) {
+>>>>>>> Stashed changes
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             jsonResponse.addProperty("success", false);
             jsonResponse.addProperty("message", "User not authenticated");
@@ -477,10 +498,15 @@ public class EventServlet extends HttpServlet {
         }
 
         int inviteId;
+<<<<<<< Updated upstream
         boolean accept;
         try {
             inviteId = Integer.parseInt(request.getParameter("inviteId"));
             accept   = Boolean.parseBoolean(request.getParameter("accept"));
+=======
+        try {
+            inviteId = Integer.parseInt(request.getParameter("inviteId"));
+>>>>>>> Stashed changes
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             jsonResponse.addProperty("success", false);
@@ -489,6 +515,7 @@ public class EventServlet extends HttpServlet {
             return;
         }
 
+<<<<<<< Updated upstream
         EventDAO.RespondInviteStatus status = EventDAO.respondToInvite(inviteId, user.getId(), accept);
         if (status == EventDAO.RespondInviteStatus.SUCCESS) {
             jsonResponse.addProperty("success", true);
@@ -610,10 +637,32 @@ public class EventServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             jsonResponse.addProperty("success", false);
             jsonResponse.addProperty("message", "Invalid JSON body");
+=======
+        String action = request.getParameter("action");
+        if ("decline".equalsIgnoreCase(action)) {
+            EventDAO.InviteRespondStatus st = EventDAO.declineInvite(inviteId, user.getId());
+            switch (st) {
+                case DECLINED_OK:
+                    jsonResponse.addProperty("success", true);
+                    jsonResponse.addProperty("message", "Invitation declined");
+                    break;
+                case INVITE_NOT_FOUND:
+                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    jsonResponse.addProperty("success", false);
+                    jsonResponse.addProperty("message", "Invite not found");
+                    break;
+                default:
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    jsonResponse.addProperty("success", false);
+                    jsonResponse.addProperty("message", "Failed to decline invitation");
+                    break;
+            }
+>>>>>>> Stashed changes
             response.getWriter().write(jsonResponse.toString());
             return;
         }
 
+<<<<<<< Updated upstream
         if (body == null || !body.has("eventId") || !body.has("marks")) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             jsonResponse.addProperty("success", false);
@@ -646,6 +695,41 @@ public class EventServlet extends HttpServlet {
             jsonResponse.addProperty("success", false);
             jsonResponse.addProperty("message", "Could not save attendance (wrong event, not host, or not in progress)");
         }
+=======
+        EventDAO.InviteRespondStatus acceptResult = EventDAO.acceptInvite(inviteId, user.getId());
+        switch (acceptResult) {
+            case ACCEPTED_OK:
+                jsonResponse.addProperty("success", true);
+                jsonResponse.addProperty("message", "Invitation accepted — you are joined to the event");
+                break;
+            case INVITE_NOT_FOUND:
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                jsonResponse.addProperty("success", false);
+                jsonResponse.addProperty("message", "Invite not found");
+                break;
+            case NOT_PENDING:
+                response.setStatus(HttpServletResponse.SC_CONFLICT);
+                jsonResponse.addProperty("success", false);
+                jsonResponse.addProperty("message", "This invitation was already used or withdrawn");
+                break;
+            case JOIN_FAILED_TIME_CONFLICT:
+                response.setStatus(HttpServletResponse.SC_CONFLICT);
+                jsonResponse.addProperty("success", false);
+                jsonResponse.addProperty("message", "Cannot accept — overlaps with another event you joined");
+                break;
+            case JOIN_FAILED_EVENT_FULL:
+                response.setStatus(HttpServletResponse.SC_CONFLICT);
+                jsonResponse.addProperty("success", false);
+                jsonResponse.addProperty("message", "Cannot accept — event is full");
+                break;
+            default:
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                jsonResponse.addProperty("success", false);
+                jsonResponse.addProperty("message", "Failed to accept invitation");
+                break;
+        }
+
+>>>>>>> Stashed changes
         response.getWriter().write(jsonResponse.toString());
     }
 
