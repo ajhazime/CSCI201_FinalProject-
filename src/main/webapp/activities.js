@@ -489,7 +489,9 @@ function renderCalendar() {
 
         const badge = todaysEvents.length > 0 ? `<div class="cal-badge">${todaysEvents.length}</div>` : "";
         const pills = todaysEvents.slice(0, 2).map((e) => {
-            return `<div class="cal-pill" title="${escapeHtml((e.activityType || "Event") + " @ " + (e.location || ""))}">${escapeHtml(e.activityType || "Event")}</div>`;
+            const pend =
+                String(e.viewerInviteStatus || "").toUpperCase() === "PENDING" ? " invite-pending" : "";
+            return `<div class="cal-pill${pend}" title="${escapeHtml((e.activityType || "Event") + " @ " + (e.location || ""))}">${escapeHtml(e.activityType || "Event")}</div>`;
         }).join("");
         const more = todaysEvents.length > 2 ? `<div class="cal-more">+${todaysEvents.length - 2} more</div>` : "";
 
@@ -549,10 +551,14 @@ function renderTable() {
         const progress = getEventProgressState(e);
         const statusDisplay = getStatusDisplay(e, progress);
         const statusClass = "status-" + statusDisplay.cssKey;
+        const inviteChip =
+            String(e.viewerInviteStatus || "").toUpperCase() === "PENDING"
+                ? '<span class="table-invite-chip">Invite</span>'
+                : "";
 
         const row = document.createElement("tr");
         row.innerHTML = `
-            <td><span class="activity-pill">${escapeHtml(e.activityType || "Activity")}</span></td>
+            <td>${inviteChip}<span class="activity-pill">${escapeHtml(e.activityType || "Activity")}</span></td>
             <td><span class="location-text">${escapeHtml(e.location || "N/A")}</span></td>
             <td>${escapeHtml(e.date || "N/A")}</td>
             <td>${escapeHtml((e.time || "N/A") + endTime)}</td>
@@ -589,6 +595,80 @@ function calcLocationCount(events) {
     return locations.size;
 }
 
+function renderInvitePanel() {
+    const body = document.getElementById("invitesBody");
+    if (!body) return;
+
+    const pending = allEvents.filter(
+        (e) =>
+            String(e.viewerInviteStatus || "").toUpperCase() === "PENDING" &&
+            e.inviteId != null &&
+            Number(e.inviteId) > 0
+    );
+
+    if (pending.length === 0) {
+        body.innerHTML = '<p class="invites-empty">No pending invitations.</p>';
+        return;
+    }
+
+    body.innerHTML = "";
+    pending.forEach(function (ev) {
+        const inviter = ev.inviterUsername ? `From ${escapeHtml(ev.inviterUsername)}` : "You were invited";
+        const range = `${escapeHtml(String(ev.date || "?"))} · ${escapeHtml(String(ev.time || "?"))}`;
+        const row = document.createElement("div");
+        row.className = "invite-banner-row";
+        row.innerHTML = `
+            <div class="invite-meta">
+                <strong>${escapeHtml(ev.activityType || "Event")}</strong>
+                <small>${inviter} · ${range} · ${escapeHtml(ev.location || "")}</small>
+            </div>
+            <div class="invite-actions" data-invite-id="${Number(ev.inviteId)}"></div>
+        `;
+        const actions = row.querySelector(".invite-actions");
+        const btnDecl = document.createElement("button");
+        btnDecl.type = "button";
+        btnDecl.className = "btn-decline";
+        btnDecl.textContent = "Decline";
+        btnDecl.addEventListener("click", function () {
+            respondToInviteFromCalendar(Number(ev.inviteId), "decline");
+        });
+        const btnAcc = document.createElement("button");
+        btnAcc.type = "button";
+        btnAcc.className = "btn-accept";
+        btnAcc.textContent = "Accept";
+        btnAcc.addEventListener("click", function () {
+            respondToInviteFromCalendar(Number(ev.inviteId), "accept");
+        });
+        actions.appendChild(btnDecl);
+        actions.appendChild(btnAcc);
+        body.appendChild(row);
+    });
+}
+
+function respondToInviteFromCalendar(inviteId, action) {
+    var url = typeof campusFitUrl === "function" ? campusFitUrl("respondInvite") : "respondInvite";
+    var params = new URLSearchParams();
+    params.set("inviteId", String(inviteId));
+    params.set("action", action);
+
+    fetch(url, { method: "POST", body: params, credentials: "same-origin" })
+        .then(function (res) {
+            return res.json().then(function (data) {
+                return { ok: res.ok, data: data };
+            });
+        })
+        .then(function (wrapped) {
+            if (!wrapped.ok) {
+                alert(wrapped.data && wrapped.data.message ? wrapped.data.message : "Request failed");
+                return;
+            }
+            fetchAndRender();
+        })
+        .catch(function () {
+            alert("Could not respond to invitation.");
+        });
+}
+
 function showError(message) {
     const tbody = document.getElementById("eventsBody");
     if (!tbody) return;
@@ -621,10 +701,12 @@ function fetchAndRender() {
             }
             renderCalendar();
             renderTable();
+            renderInvitePanel();
         })
         .catch(function(error) {
             allEvents = [];
             renderCalendar();
+            renderInvitePanel();
             if (calHint) {
                 calHint.textContent = "Could not load events; calendar is empty.";
             }
@@ -679,6 +761,7 @@ if (calAll) {
 
 // Month grid renders immediately even if /events is slow or fails — avoid a blank calendar.
 renderCalendar();
+renderInvitePanel();
 
 fetchAndRender();
 loadInvites();
