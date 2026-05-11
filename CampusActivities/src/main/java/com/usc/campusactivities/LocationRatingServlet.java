@@ -90,6 +90,7 @@ public class LocationRatingServlet extends HttpServlet {
                 FacilityReview saved = FacilityReviewDAO.getUserReview(facilityId, user.getId());
                 json.add("userReview", gson.toJsonTree(saved));
                 json.addProperty("averageRating", FacilityReviewDAO.getAverageRating(facilityId));
+                json.addProperty("reviewCount", FacilityReviewDAO.getReviewCount(facilityId));
             } else {
                 json.addProperty("message", "Could not submit review");
             }

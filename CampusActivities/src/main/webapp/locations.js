@@ -398,11 +398,60 @@ function renderDetailPanel() {
 
         <div class="detail-section-title">Student reviews</div>
         <div class="reviews-list">
-            ${renderReviews(facility.reviews)}
+            ${renderReviews(getStudentReviews(facility))}
         </div>
     `;
 
     bindReviewForm();
+}
+
+function getStudentReviews(facility) {
+    const reviews = (facility.reviews || []).slice();
+
+    if (!facility.userReview) {
+        return reviews;
+    }
+
+    const userReviewIndex = reviews.findIndex(function (review) {
+        return review.id === facility.userReview.id || review.userId === facility.userReview.userId;
+    });
+
+    if (userReviewIndex === -1) {
+        return [facility.userReview].concat(reviews);
+    }
+
+    reviews[userReviewIndex] = facility.userReview;
+    return reviews;
+}
+
+function updateFacilityWithReviewResult(facility, result) {
+    if (!facility || !result) {
+        return;
+    }
+
+    facility.userReview = result.userReview || facility.userReview;
+
+    if (facility.userReview) {
+        const reviews = facility.reviews || [];
+        const existingReviewIndex = reviews.findIndex(function (review) {
+            return review.id === facility.userReview.id || review.userId === facility.userReview.userId;
+        });
+
+        if (existingReviewIndex === -1) {
+            facility.reviews = [facility.userReview].concat(reviews);
+        } else {
+            reviews[existingReviewIndex] = facility.userReview;
+            facility.reviews = reviews;
+        }
+    }
+
+    facility.realAverageRating = Number(
+        result.averageRating !== undefined ? result.averageRating : facility.realAverageRating || 0
+    );
+    facility.realReviewCount = Number(
+        result.reviewCount !== undefined ? result.reviewCount : getStudentReviews(facility).length
+    );
+    recomputeFacilityRating(facility);
 }
 
 function renderReviews(reviews) {
@@ -501,18 +550,12 @@ function bindReviewForm() {
             const wasEdit = !!facility.userReview;
             const facilityIndex = facilities.findIndex(function (f) { return f.id === selectedFacilityId; });
             if (facilityIndex !== -1) {
-                facilities[facilityIndex].userReview = result.userReview;
-
-                // Update the REAL rating values from the backend, then re-blend
-                facilities[facilityIndex].realAverageRating = Number(result.averageRating || 0);
-                if (!wasEdit) {
-                    facilities[facilityIndex].realReviewCount =
-                        (facilities[facilityIndex].realReviewCount || 0) + 1;
-                }
-                recomputeFacilityRating(facilities[facilityIndex]);
+                updateFacilityWithReviewResult(facilities[facilityIndex], result);
             }
-            showMessage(wasEdit ? "Review updated successfully." : "Review submitted successfully.", "success");
+            renderFacilityList();
             renderDetailPanel();
+            highlightSelectedMarker();
+            showMessage(wasEdit ? "Review updated successfully." : "Review submitted successfully.", "success");
         } catch (error) {
             showMessage(error.message, "error");
         }
