@@ -5,7 +5,6 @@ const defaultFacilities = [
         displayName: "Lyon Center",
         address: "1026 W 34th St, Los Angeles, CA 90089",
         shortAddress: "1026 W 34th St",
-        hours: "Hours unavailable",
         coords: [34.02493, -118.28711],
         tags: ["Basketball", "Cardio", "Track", "Weight room", "Racquetball"],
         openSpots: null,
@@ -21,7 +20,6 @@ const defaultFacilities = [
         displayName: "Village Fitness Center",
         address: "USC Village, Los Angeles, CA 90089",
         shortAddress: "USC Village",
-        hours: "Hours unavailable",
         coords: [34.02590, -118.28595],
         tags: ["Strength", "Weights"],
         openSpots: null,
@@ -37,7 +35,6 @@ const defaultFacilities = [
         displayName: "Uytengsu Aquatics Center",
         address: "1026 W 34th St, Los Angeles, CA 90089",
         shortAddress: "Lyon Center",
-        hours: "Hours unavailable",
         coords: [34.02442, -118.28745],
         tags: ["Swimming", "8 lanes"],
         openSpots: null,
@@ -53,7 +50,6 @@ const defaultFacilities = [
         displayName: "HSC Fitness Center",
         address: "1975 Zonal Ave, Los Angeles, CA 90033",
         shortAddress: "Health Sciences Campus",
-        hours: "Hours unavailable",
         coords: [34.04892, -118.27017],
         tags: ["Cardio", "Weights"],
         openSpots: null,
@@ -69,7 +65,6 @@ const defaultFacilities = [
         displayName: "PED South Gym",
         address: "1150 W 37th St, Los Angeles, CA 90089",
         shortAddress: "PED South",
-        hours: "Hours unavailable",
         coords: [34.02024, -118.28560],
         tags: ["Gym", "Courts"],
         openSpots: null,
@@ -207,7 +202,7 @@ function renderFacilityList() {
                         <h3>${escapeHtml(facility.displayName)}</h3>
 
                         <div class="facility-address">
-                            ${escapeHtml(facility.address)} · ${escapeHtml(facility.hours)}
+                            ${escapeHtml(facility.address)}
                         </div>
 
                         <div class="stars-row">
@@ -219,10 +214,6 @@ function renderFacilityList() {
                             ${facility.tags.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}
                         </div>
                     </div>
-
-                    <span class="open-pill">
-                        Open spots: ${formatAvailability(facility.openSpots)}
-                    </span>
                 </div>
             </div>
         `;
@@ -262,30 +253,7 @@ function renderDetailPanel() {
             </div>
 
             <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
-                <span class="open-pill">Open spots: ${formatAvailability(facility.openSpots)}</span>
                 <a href="activities.html" class="primary-button">View events here</a>
-            </div>
-        </div>
-
-        <div class="detail-meta-grid">
-            <div class="metric-card">
-                <div class="metric-value">${formatAvailability(facility.capacity)}</div>
-                <div class="metric-label">Total capacity</div>
-            </div>
-
-            <div class="metric-card">
-                <div class="metric-value">${formatAvailability(facility.openSpots)}</div>
-                <div class="metric-label">Spots open now</div>
-            </div>
-        </div>
-
-        <div class="occupancy-wrap">
-            <div class="occupancy-label-row">
-                <span>Occupancy</span>
-                <span>${formatOccupancy(facility.occupancyPercent)}</span>
-            </div>
-            <div class="occupancy-bar">
-                <div class="occupancy-fill" style="width:${facility.occupancyPercent || 0}%"></div>
             </div>
         </div>
 
@@ -557,22 +525,6 @@ function formatDate(value) {
     }
 
     return date.toLocaleString();
-}
-
-function formatAvailability(value) {
-    if (value === null || value === undefined || value === "") {
-        return "N/A";
-    }
-
-    return value;
-}
-
-function formatOccupancy(value) {
-    if (value === null || value === undefined || value === "") {
-        return "N/A";
-    }
-
-    return value + "%";
 }
 
 function escapeHtml(value) {
