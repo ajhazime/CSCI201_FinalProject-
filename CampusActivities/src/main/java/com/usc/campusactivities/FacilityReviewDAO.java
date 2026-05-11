@@ -9,7 +9,7 @@ public class FacilityReviewDAO {
     public static boolean insertReview(int facilityId, int userId, int rating, String review) {
         String sql = "INSERT INTO facility_reviews (facility_id, user_id, rating, comment) " +
                      "VALUES (?, ?, ?, ?) " +
-                     "ON DUPLICATE KEY UPDATE rating = VALUES(rating), comment = VALUES(comment)";
+                     "ON DUPLICATE KEY UPDATE rating = VALUES(rating), comment = VALUES(comment), created_at = CURRENT_TIMESTAMP";
 
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -73,6 +73,27 @@ public class FacilityReviewDAO {
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return rs.getDouble(1);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+
+    public static int getReviewCount(int facilityId) {
+        String sql = "SELECT COUNT(*) FROM facility_reviews WHERE facility_id = ?";
+
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, facilityId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
                 }
             }
 
