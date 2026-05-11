@@ -36,7 +36,7 @@ public class LoginServlet extends HttpServlet {
                 if (user == null) {
                     User seed = new User(0, UserDAO.GUEST_USERNAME, GUEST_PASSWORD, "guest@usc.edu", "fitness,wellness", "beginner", 0);
                     UserDAO.insertUser(seed);
-                    user = UserDAO.getUserByUsername(GUEST_USERNAME);
+                    user = UserDAO.getUserByUsername(UserDAO.GUEST_USERNAME);
                 }
                 if (user != null && user.getPassword().equals(password)) {
                     HttpSession session = request.getSession();
