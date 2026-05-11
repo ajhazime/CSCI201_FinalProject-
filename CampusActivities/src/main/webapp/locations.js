@@ -10,7 +10,11 @@ const defaultFacilities = [
         openSpots: null,
         capacity: null,
         occupancyPercent: null,
-        averageRating: 0,
+        seedRating: 4.8,
+        seedCount: 10,
+        realAverageRating: 0,
+        realReviewCount: 0,
+        averageRating: 4.8,
         reviewCount: 0,
         reviews: []
     },
@@ -25,7 +29,11 @@ const defaultFacilities = [
         openSpots: null,
         capacity: null,
         occupancyPercent: null,
-        averageRating: 0,
+        seedRating: 4.3,
+        seedCount: 10,
+        realAverageRating: 0,
+        realReviewCount: 0,
+        averageRating: 4.3,
         reviewCount: 0,
         reviews: []
     },
@@ -40,7 +48,11 @@ const defaultFacilities = [
         openSpots: null,
         capacity: null,
         occupancyPercent: null,
-        averageRating: 0,
+        seedRating: 4.5,
+        seedCount: 10,
+        realAverageRating: 0,
+        realReviewCount: 0,
+        averageRating: 4.5,
         reviewCount: 0,
         reviews: []
     },
@@ -55,7 +67,11 @@ const defaultFacilities = [
         openSpots: null,
         capacity: null,
         occupancyPercent: null,
-        averageRating: 0,
+        seedRating: 4.0,
+        seedCount: 10,
+        realAverageRating: 0,
+        realReviewCount: 0,
+        averageRating: 4.0,
         reviewCount: 0,
         reviews: []
     },
@@ -70,7 +86,11 @@ const defaultFacilities = [
         openSpots: null,
         capacity: null,
         occupancyPercent: null,
-        averageRating: 0,
+        seedRating: 3.7,
+        seedCount: 10,
+        realAverageRating: 0,
+        realReviewCount: 0,
+        averageRating: 3.7,
         reviewCount: 0,
         reviews: []
     }
@@ -157,6 +177,34 @@ async function loadFacilities() {
     }, 200);
 }
 
+/**
+ * Recompute the displayed averageRating by blending the static seed rating
+ * with the real user-submitted reviews:
+ *
+ *   displayed = (seedRating * seedCount + realAvg * realCount)
+ *               / (seedCount + realCount)
+ *
+ * The seed acts like N virtual reviewers giving the seed rating. The more
+ * real reviews come in, the more the displayed rating reflects real
+ * opinions rather than the seed.
+ */
+function recomputeFacilityRating(facility) {
+    const seedRating = Number(facility.seedRating || 0);
+    const seedCount = Number(facility.seedCount || 0);
+    const realAvg = Number(facility.realAverageRating || 0);
+    const realCount = Number(facility.realReviewCount || 0);
+
+    const totalWeight = seedCount + realCount;
+    if (totalWeight === 0) {
+        facility.averageRating = seedRating;
+    } else {
+        facility.averageRating = (seedRating * seedCount + realAvg * realCount) / totalWeight;
+    }
+
+    // Display the REAL review count to the user (the seed is invisible)
+    facility.reviewCount = realCount;
+}
+
 function mergeBackendData(backendFacilities) {
     if (!backendFacilities || backendFacilities.length === 0) {
         return;
@@ -172,15 +220,17 @@ function mergeBackendData(backendFacilities) {
             match.id = backendFacility.id;
 
             if (backendFacility.averageRating !== undefined && backendFacility.averageRating !== null) {
-                match.averageRating = Number(backendFacility.averageRating || 0);
+                match.realAverageRating = Number(backendFacility.averageRating || 0);
             }
 
             if (backendFacility.reviewCount !== undefined && backendFacility.reviewCount !== null) {
-                match.reviewCount = Number(backendFacility.reviewCount || 0);
+                match.realReviewCount = Number(backendFacility.reviewCount || 0);
             }
 
             match.reviews = backendFacility.reviews || [];
             match.userReview = backendFacility.userReview || null;
+
+            recomputeFacilityRating(match);
         }
     });
 
@@ -264,7 +314,7 @@ function renderDetailPanel() {
                 Average rating: <strong>${facility.averageRating.toFixed(1)} / 5</strong>
             </div>
             <div style="margin-top:4px; color:#7a7a7a; font-size:14px;">
-                ${facility.reviewCount} review${facility.reviewCount === 1 ? "" : "s"}
+                ${facility.reviewCount} student review${facility.reviewCount === 1 ? "" : "s"}
             </div>
         </div>
 
@@ -398,10 +448,14 @@ function bindReviewForm() {
             const facilityIndex = facilities.findIndex(function (f) { return f.id === selectedFacilityId; });
             if (facilityIndex !== -1) {
                 facilities[facilityIndex].userReview = result.userReview;
-                facilities[facilityIndex].averageRating = result.averageRating;
+
+                // Update the REAL rating values from the backend, then re-blend
+                facilities[facilityIndex].realAverageRating = Number(result.averageRating || 0);
                 if (!wasEdit) {
-                    facilities[facilityIndex].reviewCount = (facilities[facilityIndex].reviewCount || 0) + 1;
+                    facilities[facilityIndex].realReviewCount =
+                        (facilities[facilityIndex].realReviewCount || 0) + 1;
                 }
+                recomputeFacilityRating(facilities[facilityIndex]);
             }
             showMessage(wasEdit ? "Review updated successfully." : "Review submitted successfully.", "success");
             renderDetailPanel();
