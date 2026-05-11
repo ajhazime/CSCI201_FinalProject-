@@ -170,7 +170,7 @@ async function loadFacilities() {
 
     renderFacilityList();
     renderDetailPanel();
-    renderMapMarkers();
+    renderMapMarkers(); 
 
     setTimeout(function () {
         map.invalidateSize();
