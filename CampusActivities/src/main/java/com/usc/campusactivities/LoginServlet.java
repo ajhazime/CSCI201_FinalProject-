@@ -7,7 +7,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 public class LoginServlet extends HttpServlet {
-    private static final String GUEST_USERNAME = "guest";
     private static final String GUEST_PASSWORD = "guest12345678";
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -32,10 +31,10 @@ public class LoginServlet extends HttpServlet {
             String userKey = username.trim();
             User user = null;
 
-            if (GUEST_USERNAME.equalsIgnoreCase(userKey) && GUEST_PASSWORD.equals(password)) {
-                user = UserDAO.getUserByUsername(GUEST_USERNAME);
+            if (UserDAO.GUEST_USERNAME.equalsIgnoreCase(userKey) && GUEST_PASSWORD.equals(password)) {
+                user = UserDAO.getUserByUsername(UserDAO.GUEST_USERNAME);
                 if (user == null) {
-                    User seed = new User(0, GUEST_USERNAME, GUEST_PASSWORD, "guest@usc.edu", "fitness,wellness", "beginner", 0);
+                    User seed = new User(0, UserDAO.GUEST_USERNAME, GUEST_PASSWORD, "guest@usc.edu", "fitness,wellness", "beginner", 0);
                     UserDAO.insertUser(seed);
                     user = UserDAO.getUserByUsername(GUEST_USERNAME);
                 }

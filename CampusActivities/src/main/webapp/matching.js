@@ -19,7 +19,8 @@ document.addEventListener("DOMContentLoaded", function () {
     if (logoutLink) {
         logoutLink.addEventListener("click", function (e) {
             e.preventDefault();
-            fetch("/CampusActivities/logout")
+            const url = typeof campusFitUrl === "function" ? campusFitUrl("logout") : "/CampusActivities/logout";
+            fetch(url, { credentials: "same-origin" })
                 .then(function () {
                     sessionStorage.removeItem("user");
                     window.location.href = "login.html";
@@ -35,7 +36,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const status  = document.getElementById("status");
     const results = document.getElementById("results");
 
-    fetch("api/matches")
+    const matchesUrl = typeof campusFitUrl === "function" ? campusFitUrl("api/matches") : "api/matches";
+    fetch(matchesUrl, { credentials: "same-origin" })
         .then(function (response) {
             if (response.status === 401) {
                 window.location.href = "login.html";
@@ -198,7 +200,11 @@ function openInviteModal(inviteeId, inviteeName) {
     modal.appendChild(box);
     document.body.appendChild(modal);
 
-    fetch("/CampusActivities/myEvents?inviteeId=" + inviteeId)
+    const myEventsUrl =
+        typeof campusFitUrl === "function"
+            ? campusFitUrl("myEvents?inviteeId=" + encodeURIComponent(String(inviteeId)))
+            : "/CampusActivities/myEvents?inviteeId=" + encodeURIComponent(String(inviteeId));
+    fetch(myEventsUrl, { credentials: "same-origin" })
         .then(function(res) {
             if (res.status === 401) { window.location.href = "login.html"; return; }
             return res.json();
@@ -234,7 +240,9 @@ function openInviteModal(inviteeId, inviteeName) {
 
 function sendInvite(eventId, inviteeId, modal) {
     const params = new URLSearchParams({ eventId: eventId, inviteeId: inviteeId });
-    fetch("/CampusActivities/sendInvite", { method: "POST", body: params })
+    const sendUrl =
+        typeof campusFitUrl === "function" ? campusFitUrl("sendInvite") : "/CampusActivities/sendInvite";
+    fetch(sendUrl, { method: "POST", body: params, credentials: "same-origin" })
         .then(function(res) { return res.json(); })
         .then(function(data) {
             alert(data.message);

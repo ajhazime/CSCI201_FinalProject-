@@ -17,7 +17,9 @@ const locationOptions = [
     "PED South Gym"
 ];
 
-const user = JSON.parse(sessionStorage.getItem("user"));
+const user = JSON.parse(sessionStorage.getItem("user") || "null");
+const isGuestAccount = user && String(user.username || "").trim().toLowerCase() === "guest";
+
 if (!user) {
     window.location.href = "login.html";
 } else {
@@ -54,6 +56,17 @@ const inviteSelected = document.getElementById("inviteSelected");
 const inviteeIdsInput = document.getElementById("inviteeIds");
 const inviteStatus = document.getElementById("inviteStatus");
 const selectedInvitees = new Map(); // id -> user
+
+if (isGuestAccount) {
+    const inviteSection = document.getElementById("inviteUsersSection");
+    if (inviteSection) {
+        inviteSection.style.display = "none";
+    }
+    selectedInvitees.clear();
+    if (inviteeIdsInput) {
+        inviteeIdsInput.value = "";
+    }
+}
 
 function getInitials(name) {
     const parts = String(name).trim().split(/\s+/);
@@ -376,8 +389,10 @@ document.querySelectorAll(".quick-tag").forEach((btn) => {
 
 updatePreview();
 renderCalendar();
-wireInviteSearch();
-loadInviteSuggestions();
+if (!isGuestAccount) {
+    wireInviteSearch();
+    loadInviteSuggestions();
+}
 
 calendarPrev.addEventListener("click", () => {
     calendarMonth.setMonth(calendarMonth.getMonth() - 1);

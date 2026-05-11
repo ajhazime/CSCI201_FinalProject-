@@ -6,7 +6,10 @@ try {
     user = null;
 }
 
-const isGuest = !user || user.id === 0;
+const isGuest =
+    !user ||
+    user.id === 0 ||
+    String(user.username || "").trim().toLowerCase() === "guest";
 
 function showGuestModal() {
     const modal = document.getElementById("guestModal");
@@ -51,6 +54,13 @@ if (isGuest) {
     if (sidebarUsername) sidebarUsername.textContent = username;
     if (sidebarInitials) sidebarInitials.textContent = getInitials(username);
 }
+
+(function hideInvitesForGuest() {
+    var panel = document.getElementById("invitesPanel");
+    if (isGuest && panel) {
+        panel.style.display = "none";
+    }
+})();
 
 const calTitle = document.getElementById("calTitle");
 const calGrid = document.getElementById("calGrid");
@@ -548,16 +558,13 @@ function renderTable() {
         const maxParticipants = Number(e.maxParticipants || 0);
         const currentParticipants = Number(e.currentParticipants || 0);
         const endTime = e.endTime ? ` - ${e.endTime}` : "";
-<<<<<<< Updated upstream
         const progress = getEventProgressState(e);
         const statusDisplay = getStatusDisplay(e, progress);
         const statusClass = "status-" + statusDisplay.cssKey;
-=======
         const inviteChip =
             String(e.viewerInviteStatus || "").toUpperCase() === "PENDING"
                 ? '<span class="table-invite-chip">Invite</span>'
                 : "";
->>>>>>> Stashed changes
 
         const row = document.createElement("tr");
         row.innerHTML = `
@@ -661,8 +668,9 @@ function respondToInvite(inviteId, action) {
             });
         })
         .then(function (wrapped) {
-            if (!wrapped.ok) {
-                alert(wrapped.data && wrapped.data.message ? wrapped.data.message : "Request failed");
+            var data = wrapped.data;
+            if (!wrapped.ok || !data || !data.success) {
+                alert(data && data.message ? data.message : "Request failed");
                 return;
             }
             fetchAndRender();
@@ -767,107 +775,6 @@ renderCalendar();
 renderInvitePanel();
 
 fetchAndRender();
-loadInvites();
-
-function loadInvites() {
-    var container = document.getElementById("inviteRows");
-    if (!container) return;
-
-    container.innerHTML = '<div class="invite-empty">Loading invites...</div>';
-
-    var url = typeof campusFitUrl === "function" ? campusFitUrl("myInvites") : "/CampusActivities/myInvites";
-    fetch(url, { credentials: "same-origin" })
-        .then(function(res) {
-            if (res.status === 401) { window.location.href = "login.html"; return; }
-            return res.json();
-        })
-        .then(function(invites) {
-            if (!invites) return;
-            container.innerHTML = "";
-            if (invites.length === 0) {
-                container.innerHTML = '<div class="invite-empty">No pending invites.</div>';
-                return;
-            }
-            invites.forEach(function(inv) {
-                var row = document.createElement("div");
-                row.className = "invite-row";
-                row.id = "invite-" + inv.inviteId;
-
-                var info = document.createElement("div");
-                info.className = "invite-info";
-
-                var from = document.createElement("div");
-                from.className = "invite-from";
-                from.textContent = inv.inviterName + " invited you";
-
-                var detail = document.createElement("div");
-                detail.className = "invite-detail";
-                detail.textContent = capitalize(inv.activityType) + " · " + inv.location + " · " + inv.date;
-
-                info.appendChild(from);
-                info.appendChild(detail);
-
-                var btns = document.createElement("div");
-                btns.className = "invite-btns";
-
-                var acceptBtn = document.createElement("button");
-                acceptBtn.className = "invite-btn primary";
-                acceptBtn.textContent = "Accept";
-                acceptBtn.addEventListener("click", function() {
-                    respondToInvite(inv.inviteId, true, acceptBtn, declineBtn, row);
-                });
-
-                var declineBtn = document.createElement("button");
-                declineBtn.className = "invite-btn";
-                declineBtn.textContent = "Decline";
-                declineBtn.addEventListener("click", function() {
-                    respondToInvite(inv.inviteId, false, acceptBtn, declineBtn, row);
-                });
-
-                btns.appendChild(acceptBtn);
-                btns.appendChild(declineBtn);
-                row.appendChild(info);
-                row.appendChild(btns);
-                container.appendChild(row);
-            });
-        })
-        .catch(function() {
-            container.innerHTML = '<div class="invite-empty">Failed to load invites.</div>';
-        });
-}
-
-function respondToInvite(inviteId, accept, acceptBtn, declineBtn, row) {
-    acceptBtn.disabled = true;
-    declineBtn.disabled = true;
-
-    var url = typeof campusFitUrl === "function" ? campusFitUrl("respondInvite") : "/CampusActivities/respondInvite";
-    var params = new URLSearchParams({ inviteId: inviteId, accept: accept });
-    fetch(url, { method: "POST", body: params, credentials: "same-origin" })
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-            if (data.success) {
-                row.remove();
-                var container = document.getElementById("inviteRows");
-                if (container && container.children.length === 0) {
-                    container.innerHTML = '<div class="invite-empty">No pending invites.</div>';
-                }
-            } else {
-                alert(data.message);
-                acceptBtn.disabled = false;
-                declineBtn.disabled = false;
-            }
-        })
-        .catch(function() {
-            alert("Failed to respond to invite.");
-            acceptBtn.disabled = false;
-            declineBtn.disabled = false;
-        });
-}
-
-function capitalize(str) {
-    if (!str) return "";
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-}
 
 function getInitials(name) {
     const parts = String(name).trim().split(/\s+/);
