@@ -815,5 +815,65 @@ public class EventDAO {
         }
     }
 
+    /**
+     * Events the user is involved in (host or participant), newest first, for profile history.
+     */
+    public static List<ProfileActivityItem> getProfileActivityHistory(int userId) {
+        List<ProfileActivityItem> list = new ArrayList<>();
+        String sql = "SELECT e.id AS event_id, e.activity_type, e.location, e.date, e.time, e.end_time, e.creator_id, "
+            + "e.attendance_finalized, ep.role, ep.present, "
+            + "(TIMESTAMP(e.date, e.end_time) < NOW()) AS event_ended, "
+            + "a.id AS appeal_id, a.status AS appeal_status "
+            + "FROM events e "
+            + "INNER JOIN event_participants ep ON e.id = ep.event_id AND ep.user_id = ? "
+            + "LEFT JOIN attendance_appeals a ON a.event_id = e.id AND a.appellant_id = ? "
+            + "ORDER BY e.date DESC, e.time DESC LIMIT 200";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setInt(2, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ProfileActivityItem row = new ProfileActivityItem();
+                    row.setEventId(rs.getInt("event_id"));
+                    row.setActivityType(rs.getString("activity_type"));
+                    row.setLocation(rs.getString("location"));
+                    row.setDate(rs.getString("date"));
+                    row.setTime(rs.getString("time"));
+                    row.setEndTime(rs.getString("end_time"));
+                    row.setCreatorId(rs.getInt("creator_id"));
+                    row.setRole(rs.getString("role"));
+                    Object po = rs.getObject("present");
+                    if (po == null) {
+                        row.setPresent(null);
+                    } else {
+                        row.setPresent(((Number) po).intValue() != 0);
+                    }
+                    row.setEventEnded(rs.getInt("event_ended") != 0);
+                    row.setAttendanceFinalized(rs.getBoolean("attendance_finalized"));
+                    int aid = rs.getInt("appeal_id");
+                    if (rs.wasNull()) {
+                        row.setAppealId(null);
+                        row.setAppealStatus(null);
+                    } else {
+                        row.setAppealId(aid);
+                        row.setAppealStatus(rs.getString("appeal_status"));
+                    }
+                    boolean isParticipant = "PARTICIPANT".equalsIgnoreCase(row.getRole());
+                    boolean absent = row.getPresent() == null || Boolean.FALSE.equals(row.getPresent());
+                    String as = row.getAppealStatus();
+                    boolean pending = "PENDING".equalsIgnoreCase(as);
+                    boolean granted = "GRANTED".equalsIgnoreCase(as);
+                    row.setCanAppeal(isParticipant && row.isEventEnded() && row.isAttendanceFinalized()
+                        && absent && !pending && !granted);
+                    list.add(row);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     // Other methods
 }

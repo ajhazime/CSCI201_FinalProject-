@@ -68,6 +68,20 @@ CREATE TABLE event_participants (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE attendance_appeals (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    event_id INT NOT NULL,
+    appellant_id INT NOT NULL,
+    message TEXT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    reviewed_at TIMESTAMP NULL DEFAULT NULL,
+    UNIQUE KEY uniq_event_appellant (event_id, appellant_id),
+    INDEX idx_appeals_host_lookup (event_id, status),
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
+    FOREIGN KEY (appellant_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 CREATE TABLE event_invites (
     id INT AUTO_INCREMENT PRIMARY KEY,
     event_id INT NOT NULL,
