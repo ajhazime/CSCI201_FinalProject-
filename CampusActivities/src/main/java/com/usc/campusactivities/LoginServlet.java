@@ -51,7 +51,7 @@ public class LoginServlet extends HttpServlet {
                 }
             } else {
                 user = UserDAO.getUserByUsername(userKey);
-                if (user != null && PasswordUtil.checkPassword(password, user.getPassword())) {
+                if (user != null && verifyPassword(user, password)) {
                     HttpSession session = request.getSession();
                     session.setAttribute("user", user);
                     jsonResponse.addProperty("success", true);
@@ -72,5 +72,27 @@ public class LoginServlet extends HttpServlet {
             e.printStackTrace();
             response.getWriter().write(jsonResponse.toString());
         }
+    }
+
+    /**
+     * Accepts PBKDF2 hashes from registration and legacy plaintext rows from schema.sql seeds;
+     * upgrades plaintext rows to a hash on first successful login.
+     */
+    private static boolean verifyPassword(User user, String password) {
+        String stored = user.getPassword();
+        if (stored == null) {
+            return false;
+        }
+        if (PasswordUtil.checkPassword(password, stored)) {
+            return true;
+        }
+        if (!stored.contains(":") && stored.equals(password)) {
+            String hashed = PasswordUtil.hashPassword(password);
+            if (UserDAO.updatePassword(user.getId(), hashed)) {
+                user.setPassword(hashed);
+            }
+            return true;
+        }
+        return false;
     }
 }
