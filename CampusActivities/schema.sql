@@ -120,3 +120,32 @@ CREATE TABLE password_reset_tokens (
  	('Uytengsu Aquatics Center', 'Swimming facility'),
  	('HSC Fitness Center', 'Health Sciences gym'),                                                                          
  	('PED South Gym', 'Physical Education gym'); 
+
+-- ---------------------------------------------------------------------------
+-- Test users for invites + matching (password for all: testpass123)
+-- Interests are comma-separated; overlap drives MatchingEngine.comparePreferences.
+-- Log in as any of these or register with overlapping interests (e.g. basketball, swimming, yoga).
+-- ---------------------------------------------------------------------------
+INSERT INTO users (username, password, email, interests, skill_level, penalties, firstName, lastName, avgRating, preferredLocations, penaltyTracked) VALUES
+('sam_swim', 'testpass123', 'samswim@usc.edu', 'swimming,yoga,pilates,running', 'beginner', 0, 'Sam', 'Nguyen', 4.6, 'Uytengsu Aquatics Center,Lyon Center', false),
+('riley_run', 'testpass123', 'rileyrun@usc.edu', 'running,soccer,basketball,swimming', 'intermediate', 0, 'Riley', 'Park', 4.4, 'Lyon Center,PED South Gym', false),
+('morgan_lift', 'testpass123', 'morganlift@usc.edu', 'weightlifting,basketball,running,yoga', 'competitive', 0, 'Morgan', 'Lee', 4.7, 'Lyon Center,USC Village Fitness Center', false),
+('casey_yoga', 'testpass123', 'caseyyoga@usc.edu', 'yoga,pilates,swimming,mindfulness', 'beginner', 0, 'Casey', 'Diaz', 4.3, 'USC Village Fitness Center,HSC Fitness Center', false),
+('jordan_ball', 'testpass123', 'jordanball@usc.edu', 'basketball,volleyball,soccer,running', 'intermediate', 0, 'Jordan', 'Kim', 4.5, 'PED South Gym,Lyon Center', false),
+('taylor_lane', 'testpass123', 'taylorlane@usc.edu', 'swimming,running,weightlifting', 'intermediate', 0, 'Taylor', 'Brown', 4.2, 'Uytengsu Aquatics Center,Lyon Center', false),
+('drew_volley', 'testpass123', 'drewvolley@usc.edu', 'volleyball,basketball,running,yoga', 'intermediate', 0, 'Drew', 'Martinez', 4.5, 'PED South Gym,USC Village Fitness Center', false),
+('jamie_mix', 'testpass123', 'jamiemix@usc.edu', 'swimming,yoga,running,pilates', 'beginner', 0, 'Jamie', 'Chen', 4.4, 'Uytengsu Aquatics Center,USC Village Fitness Center', false),
+('quinn_core', 'testpass123', 'quinncore@usc.edu', 'pilates,yoga,weightlifting', 'competitive', 0, 'Quinn', 'Singh', 4.8, 'Lyon Center,HSC Fitness Center', false),
+('sky_soccer', 'testpass123', 'skysoccer@usc.edu', 'soccer,running,basketball', 'intermediate', 0, 'Sky', 'Patel', 4.1, 'PED South Gym,Lyon Center', false),
+('dev_gym', 'testpass123', 'devgym@usc.edu', 'weightlifting,running,basketball,yoga', 'competitive', 0, 'Dev', 'Okonkwo', 4.6, 'Lyon Center,USC Village Fitness Center', false),
+('alex_well', 'testpass123', 'alexwell@usc.edu', 'yoga,pilates,swimming,running', 'beginner', 0, 'Alex', 'Wells', 4.0, 'USC Village Fitness Center,Uytengsu Aquatics Center', false);
+
+-- Overlapping weekly availability (Monday/Wednesday evening) for stronger compareAvailability scores.
+INSERT INTO user_availability (userID, dayOfWeek, startTime, endTime)
+SELECT id, 'Monday', '17:00:00', '19:30:00' FROM users WHERE username IN ('sam_swim','riley_run','morgan_lift','jordan_ball','taylor_lane','drew_volley');
+
+INSERT INTO user_availability (userID, dayOfWeek, startTime, endTime)
+SELECT id, 'Wednesday', '12:00:00', '14:00:00' FROM users WHERE username IN ('casey_yoga','jamie_mix','quinn_core','alex_well');
+
+INSERT INTO user_availability (userID, dayOfWeek, startTime, endTime)
+SELECT id, 'Saturday', '09:00:00', '11:00:00' FROM users WHERE username IN ('sky_soccer','dev_gym','riley_run','morgan_lift');
