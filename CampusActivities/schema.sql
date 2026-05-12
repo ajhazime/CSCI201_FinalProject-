@@ -136,23 +136,31 @@ CREATE TABLE password_reset_tokens (
  	('PED South Gym', 'Physical Education gym'); 
 
 -- ---------------------------------------------------------------------------
--- Test users for invites + matching (password for all: testpass123)
+-- Test users for invites + matching (password for all: testpass123, stored as PBKDF2 below)
 -- Interests are comma-separated; overlap drives MatchingEngine.comparePreferences.
 -- Log in as any of these or register with overlapping interests (e.g. basketball, swimming, yoga).
 -- ---------------------------------------------------------------------------
 INSERT INTO users (username, password, email, interests, skill_level, penalties, firstName, lastName, avgRating, preferredLocations, penaltyTracked) VALUES
-('sam_swim', 'testpass123', 'samswim@usc.edu', 'swimming,yoga,pilates,running', 'beginner', 0, 'Sam', 'Nguyen', 4.6, 'Uytengsu Aquatics Center,Lyon Center', false),
-('riley_run', 'testpass123', 'rileyrun@usc.edu', 'running,soccer,basketball,swimming', 'intermediate', 0, 'Riley', 'Park', 4.4, 'Lyon Center,PED South Gym', false),
-('morgan_lift', 'testpass123', 'morganlift@usc.edu', 'weightlifting,basketball,running,yoga', 'competitive', 0, 'Morgan', 'Lee', 4.7, 'Lyon Center,USC Village Fitness Center', false),
-('casey_yoga', 'testpass123', 'caseyyoga@usc.edu', 'yoga,pilates,swimming,mindfulness', 'beginner', 0, 'Casey', 'Diaz', 4.3, 'USC Village Fitness Center,HSC Fitness Center', false),
-('jordan_ball', 'testpass123', 'jordanball@usc.edu', 'basketball,volleyball,soccer,running', 'intermediate', 0, 'Jordan', 'Kim', 4.5, 'PED South Gym,Lyon Center', false),
-('taylor_lane', 'testpass123', 'taylorlane@usc.edu', 'swimming,running,weightlifting', 'intermediate', 0, 'Taylor', 'Brown', 4.2, 'Uytengsu Aquatics Center,Lyon Center', false),
-('drew_volley', 'testpass123', 'drewvolley@usc.edu', 'volleyball,basketball,running,yoga', 'intermediate', 0, 'Drew', 'Martinez', 4.5, 'PED South Gym,USC Village Fitness Center', false),
-('jamie_mix', 'testpass123', 'jamiemix@usc.edu', 'swimming,yoga,running,pilates', 'beginner', 0, 'Jamie', 'Chen', 4.4, 'Uytengsu Aquatics Center,USC Village Fitness Center', false),
-('quinn_core', 'testpass123', 'quinncore@usc.edu', 'pilates,yoga,weightlifting', 'competitive', 0, 'Quinn', 'Singh', 4.8, 'Lyon Center,HSC Fitness Center', false),
-('sky_soccer', 'testpass123', 'skysoccer@usc.edu', 'soccer,running,basketball', 'intermediate', 0, 'Sky', 'Patel', 4.1, 'PED South Gym,Lyon Center', false),
-('dev_gym', 'testpass123', 'devgym@usc.edu', 'weightlifting,running,basketball,yoga', 'competitive', 0, 'Dev', 'Okonkwo', 4.6, 'Lyon Center,USC Village Fitness Center', false),
-('alex_well', 'testpass123', 'alexwell@usc.edu', 'yoga,pilates,swimming,running', 'beginner', 0, 'Alex', 'Wells', 4.0, 'USC Village Fitness Center,Uytengsu Aquatics Center', false);
+('sam_swim', 'Y2FtcHVzYWN0aXZpdGllczE=:pw/7KaSlNkxTqPNme7LhOB1V+PzlRFVbNStAeH2YOcI=', 'samswim@usc.edu', 'swimming,yoga,pilates,running', 'beginner', 0, 'Sam', 'Nguyen', 4.6, 'Uytengsu Aquatics Center,Lyon Center', false),
+('riley_run', 'Y2FtcHVzYWN0aXZpdGllczE=:pw/7KaSlNkxTqPNme7LhOB1V+PzlRFVbNStAeH2YOcI=', 'rileyrun@usc.edu', 'running,soccer,basketball,swimming', 'intermediate', 0, 'Riley', 'Park', 4.4, 'Lyon Center,PED South Gym', false),
+('morgan_lift', 'Y2FtcHVzYWN0aXZpdGllczE=:pw/7KaSlNkxTqPNme7LhOB1V+PzlRFVbNStAeH2YOcI=', 'morganlift@usc.edu', 'weightlifting,basketball,running,yoga', 'competitive', 0, 'Morgan', 'Lee', 4.7, 'Lyon Center,USC Village Fitness Center', false),
+('casey_yoga', 'Y2FtcHVzYWN0aXZpdGllczE=:pw/7KaSlNkxTqPNme7LhOB1V+PzlRFVbNStAeH2YOcI=', 'caseyyoga@usc.edu', 'yoga,pilates,swimming,mindfulness', 'beginner', 0, 'Casey', 'Diaz', 4.3, 'USC Village Fitness Center,HSC Fitness Center', false),
+('jordan_ball', 'Y2FtcHVzYWN0aXZpdGllczE=:pw/7KaSlNkxTqPNme7LhOB1V+PzlRFVbNStAeH2YOcI=', 'jordanball@usc.edu', 'basketball,volleyball,soccer,running', 'intermediate', 0, 'Jordan', 'Kim', 4.5, 'PED South Gym,Lyon Center', false),
+('taylor_lane', 'Y2FtcHVzYWN0aXZpdGllczE=:pw/7KaSlNkxTqPNme7LhOB1V+PzlRFVbNStAeH2YOcI=', 'taylorlane@usc.edu', 'swimming,running,weightlifting', 'intermediate', 0, 'Taylor', 'Brown', 4.2, 'Uytengsu Aquatics Center,Lyon Center', false),
+('drew_volley', 'Y2FtcHVzYWN0aXZpdGllczE=:pw/7KaSlNkxTqPNme7LhOB1V+PzlRFVbNStAeH2YOcI=', 'drewvolley@usc.edu', 'volleyball,basketball,running,yoga', 'intermediate', 0, 'Drew', 'Martinez', 4.5, 'PED South Gym,USC Village Fitness Center', false),
+('jamie_mix', 'Y2FtcHVzYWN0aXZpdGllczE=:pw/7KaSlNkxTqPNme7LhOB1V+PzlRFVbNStAeH2YOcI=', 'jamiemix@usc.edu', 'swimming,yoga,running,pilates', 'beginner', 0, 'Jamie', 'Chen', 4.4, 'Uytengsu Aquatics Center,USC Village Fitness Center', false),
+('quinn_core', 'Y2FtcHVzYWN0aXZpdGllczE=:pw/7KaSlNkxTqPNme7LhOB1V+PzlRFVbNStAeH2YOcI=', 'quinncore@usc.edu', 'pilates,yoga,weightlifting', 'competitive', 0, 'Quinn', 'Singh', 4.8, 'Lyon Center,HSC Fitness Center', false),
+('sky_soccer', 'Y2FtcHVzYWN0aXZpdGllczE=:pw/7KaSlNkxTqPNme7LhOB1V+PzlRFVbNStAeH2YOcI=', 'skysoccer@usc.edu', 'soccer,running,basketball', 'intermediate', 0, 'Sky', 'Patel', 4.1, 'PED South Gym,Lyon Center', false),
+('dev_gym', 'Y2FtcHVzYWN0aXZpdGllczE=:pw/7KaSlNkxTqPNme7LhOB1V+PzlRFVbNStAeH2YOcI=', 'devgym@usc.edu', 'weightlifting,running,basketball,yoga', 'competitive', 0, 'Dev', 'Okonkwo', 4.6, 'Lyon Center,USC Village Fitness Center', false),
+('alex_well', 'Y2FtcHVzYWN0aXZpdGllczE=:pw/7KaSlNkxTqPNme7LhOB1V+PzlRFVbNStAeH2YOcI=', 'alexwell@usc.edu', 'yoga,pilates,swimming,running', 'beginner', 0, 'Alex', 'Wells', 4.0, 'USC Village Fitness Center,Uytengsu Aquatics Center', false);
+
+-- If an older copy of this file inserted plaintext testpass123, upgrade those rows to PBKDF2.
+UPDATE users
+SET password = 'Y2FtcHVzYWN0aXZpdGllczE=:pw/7KaSlNkxTqPNme7LhOB1V+PzlRFVbNStAeH2YOcI='
+WHERE username IN (
+    'sam_swim', 'riley_run', 'morgan_lift', 'casey_yoga', 'jordan_ball', 'taylor_lane',
+    'drew_volley', 'jamie_mix', 'quinn_core', 'sky_soccer', 'dev_gym', 'alex_well'
+) AND password = 'testpass123';
 
 -- Overlapping weekly availability (Monday/Wednesday evening) for stronger compareAvailability scores.
 INSERT INTO user_availability (userID, dayOfWeek, startTime, endTime)
