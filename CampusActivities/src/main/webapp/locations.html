@@ -70,13 +70,18 @@
             <div id="messageBox" class="message-box"></div>
 
             <section class="top-grid">
-                <div class="map-card">
-                    <div id="map"></div>
-
-                    <div class="map-legend">
-                        <div><span class="legend-dot selected-dot"></span> Selected</div>
-                        <div><span class="legend-dot facility-dot"></span> Facility</div>
+                <div class="left-col">
+                    <div class="map-card">
+                        <div id="map"></div>
+                        <div class="map-legend">
+                            <div><span class="legend-dot selected-dot"></span> Selected</div>
+                            <div><span class="legend-dot facility-dot"></span> Facility</div>
+                        </div>
                     </div>
+
+                    <section id="detailPanel" class="detail-panel">
+                        <div class="loading-card">Loading facility details...</div>
+                    </section>
                 </div>
 
                 <div class="facility-list-card">
@@ -84,10 +89,6 @@
                         <div class="loading-card">Loading facilities...</div>
                     </div>
                 </div>
-            </section>
-
-            <section id="detailPanel" class="detail-panel">
-                <div class="loading-card">Loading facility details...</div>
             </section>
         </main>
     </div>

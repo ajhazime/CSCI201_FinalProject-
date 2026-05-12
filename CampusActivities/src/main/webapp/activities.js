@@ -767,7 +767,7 @@ renderCalendar();
 renderInvitePanel();
 
 fetchAndRender();
-loadInvites();
+if (!isGuest) loadInvites();
 
 function loadInvites() {
     var container = document.getElementById("inviteRows");

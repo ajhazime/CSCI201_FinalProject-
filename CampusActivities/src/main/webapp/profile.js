@@ -797,7 +797,7 @@ function renderActivityHistory(items) {
         var rolePill = isHost
             ? '<span class="pill pill-host">Host</span>'
             : '<span class="pill pill-participant">Joined</span>';
-        var appealBtn = row.canAppeal
+        var appealBtn = (!isHost && row.canAppeal)
             ? '<button type="button" class="btn-appeal" onclick="openAppealPage(' + row.eventId + ')">Appeal penalty</button>'
             : "";
         return (
